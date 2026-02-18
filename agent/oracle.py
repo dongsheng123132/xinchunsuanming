@@ -25,7 +25,7 @@ fund_agent_if_low(oracle.wallet.address())
 @oracle.on_event("startup")
 async def startup(ctx: Context):
     ctx.logger.info(f"Oracle Agent Started at {oracle.address}")
-    ctx.logger.info(f"Ready to interpret fortunes for 0.01 USDC (simulated)")
+    ctx.logger.info(f"Ready to interpret fortunes for 0.1 USDC (simulated)")
 
 @oracle.on_message(model=FortuneRequest)
 async def handle_fortune_request(ctx: Context, sender: str, msg: FortuneRequest):

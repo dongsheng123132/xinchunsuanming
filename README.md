@@ -10,7 +10,7 @@ AI 新春福签 · x402 开运小神坛
 
 这是一个专为春节打造的「AI 开运福签」应用。你可以先选一个愿望方向（事业、财运、感情、健康、家人平安），通过摇签筒抽出三支新年福签，再由 AI 为你解签，送上一份专属的新春祝福和行动建议，让新的一年更有仪式感和好运气。  
 
-每一次解签都通过 Coinbase x402 协议，用 0.01 USDC 完成支付，安全透明、按次计费，不需要复杂账户体系，非常适合 AI Agent 和个人用户轻量使用。
+每一次解签都通过 Coinbase x402 协议，用 0.1 USDC 完成支付，安全透明、按次计费，不需要复杂账户体系，非常适合 AI Agent 和个人用户轻量使用。
 
 ### 2. 项目结构
 
@@ -55,7 +55,7 @@ python oracle.py
 - 摇签仪式：用户点击签筒进行摇动，模拟真实的抽签体验。  
 - 三签定数：每次会话需连续抽取三支签，组合决定本次签运。  
 - AI 解签：抽取完成后调用 AI 生成签文解读和新年祝福。  
-- x402 支付：每次解签按 0.01 USDC 收费，只支持基于 HTTP 402 的 x402 协议支付。
+- x402 支付：每次解签按 0.1 USDC 收费，只支持基于 HTTP 402 的 x402 协议支付。
 
 ### 6. 技术栈
 
@@ -91,7 +91,7 @@ AI Lunar New Year Fortune · Powered by x402
 
 This app is a “Lunar New Year Fortune & Blessing” experience designed for both humans and AI agents. You first choose a focus area (Career, Wealth, Love, Health, or Family), then shake the virtual fortune tube to draw three lots. An AI oracle interprets your lots and generates a personalized New Year blessing card with clear guidance and positive wishes for the year ahead.  
 
-Each interpretation is paid via the Coinbase x402 protocol with a 0.01 USDC per-session fee, using HTTP 402 payments for secure, transparent, pay-per-use access—ideal for lightweight usage by AI agents and individual users.
+Each interpretation is paid via the Coinbase x402 protocol with a 0.1 USDC per-session fee, using HTTP 402 payments for secure, transparent, pay-per-use access—ideal for lightweight usage by AI agents and individual users.
 
 ### 2. Project Structure
 
@@ -136,7 +136,7 @@ To deploy the agent on [Agent Verse](https://www.agent-verse.live):
 - Shaking ritual: users tap the tube to shake and draw lots with an immersive animation.  
 - Three-lot session: each session draws three lots; the combination defines the fortune.  
 - AI interpretation: after drawing, the AI generates an interpretation and New Year blessing.  
-- x402 payments: each interpretation costs 0.01 USDC and is paid exclusively via the x402 protocol (HTTP 402).
+- x402 payments: each interpretation costs 0.1 USDC and is paid exclusively via the x402 protocol (HTTP 402).
 
 ### 6. Tech Stack
 
@@ -174,7 +174,7 @@ AI 新春福籤 · x402 開運小神壇
 
 這是一個為農曆新年打造的「AI 開運福籤」應用。你可以先選擇一個心願方向（事業、財運、感情、健康、闔家平安），透過搖籤筒抽出三支新年福籤，接著由 AI 為你解籤，送上一份專屬的新春祝福與行動建議，讓新的一年更有儀式感與好運加持。  
 
-每一次解籤都透過 Coinbase x402 協議，以 0.01 USDC 完成支付，安全透明、按次收費，無需複雜帳號系統，非常適合 AI Agent 以及個人用戶輕量使用。
+每一次解籤都透過 Coinbase x402 協議，以 0.1 USDC 完成支付，安全透明、按次收費，無需複雜帳號系統，非常適合 AI Agent 以及個人用戶輕量使用。
 
 ### 2. 專案結構
 
@@ -219,7 +219,7 @@ python oracle.py
 - 搖籤儀式：使用者點擊籤筒進行搖籤，模擬真實抽籤體驗。  
 - 三籤定數：每次會話需連續抽出三支籤，組合決定本次籤運。  
 - AI 解籤：完成抽籤後，由 AI 生成籤文解讀與新年祝福。  
-- x402 支付：每次解籤以 0.01 USDC 收費，只支援基於 HTTP 402 的 x402 協議支付。
+- x402 支付：每次解籤以 0.1 USDC 收費，只支援基於 HTTP 402 的 x402 協議支付。
 
 ### 6. 技術棧
 

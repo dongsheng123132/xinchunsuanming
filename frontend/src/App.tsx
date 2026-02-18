@@ -42,7 +42,7 @@ const translations: Record<Lang, Translation> = {
     interpretingDescription:
       '这三支福签记录了你此刻的新年气运。支付后，AI 会结合签号与愿望方向，为你生成一份新春开运指引。',
     feeLabel: '费用',
-    revealButton: '支付并解签（0.01 USDC）',
+    revealButton: '支付并解签（0.1 USDC）',
     consultingLabel: '正在请示 AI 神官……',
     resultTitle: 'AI 新春解签',
     resetButton: '再来一签，开启新的运势',
@@ -70,7 +70,7 @@ const translations: Record<Lang, Translation> = {
     interpretingDescription:
       'These three lots reflect your current New Year energy. After payment, the AI oracle will interpret them and craft a personal blessing for you.',
     feeLabel: 'Fee',
-    revealButton: 'Pay & Reveal (0.01 USDC)',
+    revealButton: 'Pay & Reveal (0.1 USDC)',
     consultingLabel: 'Consulting the oracle...',
     resultTitle: "Oracle's Decree",
     resetButton: 'Start a new session',
@@ -98,7 +98,7 @@ const translations: Record<Lang, Translation> = {
     interpretingDescription:
       '這三支福籤映照出你此刻的新年氣運。支付後，AI 會依照籤號與心願方向，為你生成一份新春開運指引。',
     feeLabel: '費用',
-    revealButton: '支付並解籤（0.01 USDC）',
+    revealButton: '支付並解籤（0.1 USDC）',
     consultingLabel: '正在請示 AI 神官……',
     resultTitle: 'AI 新春解籤',
     resetButton: '再來一籤，開啟新的運勢',
@@ -221,7 +221,7 @@ function App() {
                 <div className="flex items-center justify-between text-sm text-gray-300 mb-2">
                   <span>{t.costLabel}</span>
                   <span className="flex items-center text-yellow-400 font-bold">
-                    <Coins className="w-4 h-4 mr-1" /> 0.01 USDC
+                    <Coins className="w-4 h-4 mr-1" /> 0.1 USDC
                   </span>
                 </div>
                 <p className="text-xs text-gray-500 text-left">{t.poweredBy}</p>
@@ -321,7 +321,7 @@ function App() {
                 <p className="text-gray-300 mb-4">{t.interpretingDescription}</p>
                 <div className="flex justify-between items-center text-sm border-t border-gray-700 pt-4">
                   <span className="text-gray-400">{t.feeLabel}</span>
-                  <span className="text-yellow-400 font-bold">0.01 USDC</span>
+                  <span className="text-yellow-400 font-bold">0.1 USDC</span>
                 </div>
               </div>
 

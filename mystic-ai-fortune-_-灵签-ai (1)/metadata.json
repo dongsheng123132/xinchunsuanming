@@ -1,0 +1,5 @@
+{
+  "name": "Mystic AI Fortune / 灵签 AI",
+  "description": "A mystical fortune-telling application using Gemini AI to interpret lots drawn from a virtual cylinder. Features a USDC payment simulation.",
+  "requestFramePermissions": []
+}
