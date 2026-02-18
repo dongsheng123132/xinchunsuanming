@@ -1,103 +1,74 @@
 ---
-name: ai-fortune-x402
+name: ai-fortune-oracle
 version: 1.0.0
-description: AI 新春福签解签服务 — 支付 0.1 USDC 通过 x402 协议，AI 大师为你抽签解签。Pay 0.1 USDC via x402 and get your Lunar New Year fortune interpreted by AI.
+description: Pay 0.1 USDC via x402, draw 3 fortune sticks, get AI-powered Lunar New Year interpretation. 支付 0.1 USDC 抽签解签。
 homepage: https://xinchunsuanming.vercel.app
-metadata: {"emoji":"🔮","category":"ai-service","api_base":"https://xinchunsuanming.vercel.app/api","price":"0.1 USDC","network":"Base"}
+api_base: https://xinchunsuanming.vercel.app/api
+auth: x402
+pricing: 0.1 USDC per reading
+network: Base (eip155:8453)
+treasury: "0x4eCf92bAb524039Fc4027994b9D88C2DB2Ee05E6"
+usdc_contract: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+metadata: {"emoji":"🔮","category":"ai-service","min_price":"$0.10"}
 ---
 
-# 🔮 AI 新春福签 · x402 Fortune Stick Oracle
+# 🔮 AI Fortune Oracle — Skill Doc
 
-Draw 3 fortune sticks and receive an AI-powered Lunar New Year fortune interpretation. Every reading costs **0.1 USDC** via the x402 payment protocol on Base chain.
-
-**Base URL:** `https://xinchunsuanming.vercel.app`
-
----
-
-## How It Works
-
-1. **Pay 0.1 USDC** → AI Master interprets your fortune
-2. **No payment = No interpretation** — the oracle only speaks after receiving your offering
-3. Payment is gasless (EIP-3009 signature, settled by facilitator)
+> **TL;DR for AI Agents:** Pay 0.1 USDC on Base → get AI fortune reading. One command:
+> ```
+> npx awal x402 pay https://xinchunsuanming.vercel.app/api/fortune/interpret -X POST -H "Content-Type: application/json" -d '{"stickNumbers":[42,17,88],"category":"career","language":"zh-CN"}'
+> ```
 
 ---
 
-## Quick Start (AI Agent)
+## What Is This
 
-### Option A: Awal CLI (Recommended for Agents)
+AI 新春福签 is a Lunar New Year fortune oracle. You draw 3 fortune sticks (1-100), pick a category, and an AI Taoist master interprets your fortune with a poem, luck level, explanation, and advice. Every reading costs **0.1 USDC** via x402 on **Base mainnet** — no payment, no fortune. The AI only speaks after receiving your offering.
+
+---
+
+## Step 0: Create Wallet (If You Don't Have One)
 
 ```bash
-# Install Awal
-npm install awal
+# Install Awal CLI
+npm install -g awal
 
-# Login & setup wallet
+# Create wallet & login
 npx awal auth login your-email@example.com
-npx awal auth verify <Flow_ID> <code>
+
+# Check the verification email, then verify
+npx awal auth verify <FLOW_ID> <6_DIGIT_CODE>
+
+# View your wallet address
+npx awal address
 
 # Check balance (need ≥0.1 USDC on Base)
 npx awal balance
+```
 
-# Pay & get fortune in one command
+Need testnet/mainnet USDC? Get from https://faucet.circle.com/ (testnet) or buy on any exchange and bridge to Base.
+
+---
+
+## Step 1: Draw Fortune (Quick Action — Copy & Run)
+
+```bash
 npx awal x402 pay https://xinchunsuanming.vercel.app/api/fortune/interpret \
   -X POST \
   -H "Content-Type: application/json" \
   -d '{"stickNumbers":[42,17,88],"category":"career","language":"zh-CN"}'
 ```
 
-### Option B: Direct x402 HTTP Flow
-
-```bash
-# Step 1: Call endpoint → get 402 Payment Required
-curl -s -X POST https://xinchunsuanming.vercel.app/api/fortune/interpret \
-  -H "Content-Type: application/json" \
-  -d '{"stickNumbers":[42,17,88],"category":"career","language":"zh-CN"}'
-
-# Response: HTTP 402
-# Header: X-Payment-Requirements (base64 JSON with payment details)
-
-# Step 2: Sign EIP-3009 transferWithAuthorization for 0.1 USDC
-# Step 3: Retry with X-PAYMENT header containing signed payment
-curl -s -X POST https://xinchunsuanming.vercel.app/api/fortune/interpret \
-  -H "Content-Type: application/json" \
-  -H "X-PAYMENT: <base64-encoded-payment>" \
-  -d '{"stickNumbers":[42,17,88],"category":"career","language":"zh-CN"}'
-```
-
-### Option C: Browser (Human Users)
-
-Visit the website, connect MetaMask/Coinbase Wallet, and draw fortune sticks:
-```
-https://xinchunsuanming.vercel.app
-```
-
----
-
-## API Reference
-
-### POST `/api/fortune/interpret` (x402 Protected — 0.1 USDC)
-
-**Request Body:**
+**Response (200 — after 0.1 USDC payment auto-settled):**
 ```json
 {
   "stickNumbers": [42, 17, 88],
-  "category": "career",
-  "language": "zh-CN",
-  "wishText": "希望今年顺利完成职业转型"
-}
-```
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `stickNumbers` | `number[]` | Yes | Array of exactly 3 numbers (1-100) |
-| `category` | `string` | Yes | One of: `career`, `wealth`, `love`, `health`, `family` |
-| `language` | `string` | No | `zh-CN` (default), `zh-TW`, or `en` |
-| `wishText` | `string` | No | Personal wish for more tailored interpretation |
-
-**Response (200 OK — after payment verified):**
-```json
-{
-  "stickNumbers": [42, 17, 88],
-  "mainPoem": ["新歲啟程風漸暖，", "三星隱現護前程。", "心安處處皆為福，", "但憑腳步踏實行。"],
+  "mainPoem": [
+    "新歲啟程風漸暖，",
+    "三星隱現護前程。",
+    "心安處處皆為福，",
+    "但憑腳步踏實行。"
+  ],
   "overallLuck": "中上 · 穩中有升",
   "explanation": "三签合观，运势向好。虽前路迷蒙，但大方向吉利，宜稳步前行。",
   "advice": "宜怀信心与乐观之心前行。新年利于深思而行之人。",
@@ -107,13 +78,56 @@ https://xinchunsuanming.vercel.app
 }
 ```
 
-**Response (402 Payment Required — no payment):**
-```
-HTTP 402
-X-Payment-Requirements: <base64 JSON>
+---
+
+## Complete API Reference
+
+### POST `/api/fortune/interpret` (x402 Protected — 0.1 USDC)
+
+The main endpoint. Returns 402 if no payment, 200 with fortune after payment verified.
+
+**Request:**
+```bash
+curl -X POST https://xinchunsuanming.vercel.app/api/fortune/interpret \
+  -H "Content-Type: application/json" \
+  -d '{
+    "stickNumbers": [42, 17, 88],
+    "category": "career",
+    "language": "zh-CN",
+    "wishText": "希望今年顺利完成职业转型"
+  }'
 ```
 
-The `X-Payment-Requirements` header decodes to:
+**Parameters:**
+
+| Param | Type | Required | Description | Example |
+|-------|------|----------|-------------|---------|
+| `stickNumbers` | `int[]` | yes | Exactly 3 numbers, each 1-100 | `[42, 17, 88]` |
+| `category` | `string` | yes | One of: `career`, `wealth`, `love`, `health`, `family` | `"career"` |
+| `language` | `string` | no | `zh-CN` (default), `zh-TW`, `en` | `"zh-CN"` |
+| `wishText` | `string` | no | Personal wish for tailored interpretation | `"希望今年..."` |
+
+**Response (200 OK):**
+```json
+{
+  "stickNumbers": [42, 17, 88],
+  "mainPoem": ["line1", "line2", "line3", "line4"],
+  "overallLuck": "中上 · 穩中有升",
+  "explanation": "详细解读...",
+  "advice": "具体建议...",
+  "payer": "0x1234...abcd",
+  "x402_paid": true,
+  "timestamp": "2026-02-18T12:00:00.000Z"
+}
+```
+
+**Response (402 Payment Required — no X-PAYMENT header):**
+```
+HTTP/1.1 402 Payment Required
+X-Payment-Requirements: <base64 encoded JSON>
+```
+
+Decoded `X-Payment-Requirements`:
 ```json
 [{
   "scheme": "exact",
@@ -125,27 +139,74 @@ The `X-Payment-Requirements` header decodes to:
 }]
 ```
 
-### POST `/api/fortune/interpret-free` (No Payment)
+**Errors:**
 
-Same request/response format but free. Returns `"x402_paid": false`. For testing only.
+| Status | Error | Cause |
+|--------|-------|-------|
+| 400 | `invalid_request` | stickNumbers not array of 3, or missing category |
+| 402 | `payment_required` | No X-PAYMENT header or payment invalid |
+| 500 | `server_error` | AI service unavailable (returns fallback fortune) |
+
+---
+
+### POST `/api/fortune/interpret-free` (No Payment — Testing Only)
+
+Same request/response format but free. Always returns `"x402_paid": false`.
+
+**Request:**
+```bash
+curl -X POST https://xinchunsuanming.vercel.app/api/fortune/interpret-free \
+  -H "Content-Type: application/json" \
+  -d '{"stickNumbers":[42,17,88],"category":"career","language":"zh-CN"}'
+```
+
+**Response (200):**
+```json
+{
+  "stickNumbers": [42, 17, 88],
+  "mainPoem": ["新春迎新福，", "三星照九霄。", "心安万事顺，", "福运自来潮。"],
+  "overallLuck": "吉 · 上签",
+  "explanation": "三签合观，运势向好。",
+  "advice": "宜怀信心与乐观之心前行。",
+  "x402_paid": false
+}
+```
+
+---
 
 ### GET `/api/health`
 
+**Request:**
+```bash
+curl https://xinchunsuanming.vercel.app/api/health
+```
+
+**Response:**
 ```json
-{"status": "ok", "x402_ready": true}
+{"status": "ok", "platform": "vercel", "x402_ready": false}
+```
+
+---
+
+### GET `/api/skill` or `/skill.md`
+
+Returns this skill documentation in Markdown format.
+
+```bash
+curl https://xinchunsuanming.vercel.app/skill.md
 ```
 
 ---
 
 ## Categories
 
-| Value | 中文 | English |
-|-------|------|---------|
-| `career` | 事业前程 | Career & Growth |
-| `wealth` | 财运亨通 | Wealth & Stability |
-| `love` | 姻缘情感 | Love & Relationships |
-| `health` | 身体健康 | Health & Energy |
-| `family` | 阖家平安 | Family & Safety |
+| Value | 中文 | English | What It Covers |
+|-------|------|---------|----------------|
+| `career` | 事业前程 | Career & Growth | Job, promotion, business |
+| `wealth` | 财运亨通 | Wealth & Stability | Money, investment, income |
+| `love` | 姻缘情感 | Love & Relationships | Romance, marriage, dating |
+| `health` | 身体健康 | Health & Energy | Physical/mental wellness |
+| `family` | 阖家平安 | Family & Safety | Family harmony, children |
 
 ---
 
@@ -153,62 +214,95 @@ Same request/response format but free. Returns `"x402_paid": false`. For testing
 
 | Parameter | Value |
 |-----------|-------|
-| **Price** | 0.1 USDC |
-| **Network** | Base (eip155:8453) |
+| **Price** | 0.1 USDC (100000 in 6-decimal units) |
+| **Network** | Base mainnet (eip155:8453, chainId 8453) |
 | **USDC Contract** | `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` |
-| **Treasury** | `0x4eCf92bAb524039Fc4027994b9D88C2DB2Ee05E6` |
-| **Protocol** | x402 (EIP-3009 transferWithAuthorization) |
-| **Gas** | None — payment is a gasless signature |
+| **Treasury Address** | `0x4eCf92bAb524039Fc4027994b9D88C2DB2Ee05E6` |
+| **Protocol** | x402 — EIP-3009 `transferWithAuthorization` |
+| **Gas Fee** | None — payment is a gasless signature |
+| **Facilitator** | Coinbase CDP (auto-settled on-chain) |
 
 ---
 
-## Integration Example (Node.js)
+## End-to-End Example Script
+
+```bash
+#!/bin/bash
+# === AI Fortune Oracle — Full Flow ===
+
+# 0. Setup wallet (skip if already have one)
+# npm install -g awal
+# npx awal auth login you@email.com
+# npx awal auth verify <FLOW_ID> <CODE>
+
+# 1. Check balance
+echo "=== Checking wallet ==="
+npx awal balance
+
+# 2. Generate random stick numbers
+S1=$((RANDOM % 100 + 1))
+S2=$((RANDOM % 100 + 1))
+S3=$((RANDOM % 100 + 1))
+echo "=== Drawing sticks: $S1, $S2, $S3 ==="
+
+# 3. Pay 0.1 USDC and get fortune (one command)
+RESULT=$(npx awal x402 pay \
+  https://xinchunsuanming.vercel.app/api/fortune/interpret \
+  -X POST \
+  -H "Content-Type: application/json" \
+  -d "{\"stickNumbers\":[$S1,$S2,$S3],\"category\":\"career\",\"language\":\"zh-CN\"}")
+
+echo "=== Fortune Result ==="
+echo "$RESULT" | jq .
+
+# 4. Extract key fields
+echo ""
+echo "Luck:    $(echo $RESULT | jq -r '.overallLuck')"
+echo "Poem:    $(echo $RESULT | jq -r '.mainPoem[]')"
+echo "Advice:  $(echo $RESULT | jq -r '.advice')"
+echo "Paid:    $(echo $RESULT | jq -r '.x402_paid')"
+```
+
+---
+
+## Node.js / TypeScript Integration
 
 ```typescript
 import { privateKeyToAccount } from "viem/accounts";
 
-// Setup x402 client
+// Setup x402 auto-payment client
 const { x402Client, wrapFetchWithPayment } = await import("@x402/fetch");
 const { registerExactEvmScheme } = await import("@x402/evm/exact/client");
 
 const account = privateKeyToAccount("0xYOUR_PRIVATE_KEY");
 const client = new x402Client();
 registerExactEvmScheme(client, { signer: account });
-const fetchWithPayment = wrapFetchWithPayment(fetch, client);
+const pay = wrapFetchWithPayment(fetch, client);
 
-// Draw fortune (auto-pays 0.1 USDC)
-const res = await fetchWithPayment("https://xinchunsuanming.vercel.app/api/fortune/interpret", {
+// Draw fortune — auto-pays 0.1 USDC on 402
+const res = await pay("https://xinchunsuanming.vercel.app/api/fortune/interpret", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
     stickNumbers: [42, 17, 88],
     category: "career",
     language: "zh-CN",
-    wishText: "希望今年事业顺利"
+    wishText: "希望今年事业顺利",
   }),
 });
 
 const fortune = await res.json();
 console.log(fortune.mainPoem.join("\n"));
-console.log(`运势: ${fortune.overallLuck}`);
 ```
 
 ---
 
-## For AgentVerse Grid Integration
+## API Summary Table
 
-Register this service on the AgentVerse grid to let other agents discover you:
-
-```bash
-curl -X PUT https://www.agent-verse.live/api/cells/update \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "🔮 AI Fortune Oracle",
-    "summary": "Pay 0.1 USDC, draw 3 sticks, get AI fortune interpretation",
-    "fill_color": "#8A0000",
-    "content_url": "https://xinchunsuanming.vercel.app",
-    "iframe_url": "https://xinchunsuanming.vercel.app",
-    "markdown": "## 🔮 AI 新春福签\n\nDraw fortune sticks and receive AI-powered Lunar New Year interpretation.\n\n### API\n- `POST /api/fortune/interpret` — 0.1 USDC via x402\n- Categories: career, wealth, love, health, family\n- Languages: zh-CN, zh-TW, en\n\n### Quick Test\n```\nnpx awal x402 pay https://xinchunsuanming.vercel.app/api/fortune/interpret -X POST -d {\"stickNumbers\":[42,17,88],\"category\":\"career\"}\n```"
-  }'
-```
+| Method | Endpoint | Auth | Price | Description |
+|--------|----------|------|-------|-------------|
+| POST | `/api/fortune/interpret` | x402 | $0.10 | AI fortune interpretation (paid) |
+| POST | `/api/fortune/interpret-free` | none | free | AI fortune interpretation (testing) |
+| GET | `/api/health` | none | free | Service health check |
+| GET | `/api/skill` | none | free | This skill documentation |
+| GET | `/skill.md` | none | free | This skill documentation (static) |

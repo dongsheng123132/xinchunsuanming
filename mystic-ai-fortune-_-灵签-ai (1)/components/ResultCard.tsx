@@ -125,9 +125,9 @@ export const ResultCard: React.FC<ResultCardProps> = ({ result, language, onRese
           </div>
         </div>
 
-        {/* Footer for Screenshot context (Optional) */}
-        <div className="mt-8 pt-4 border-t border-temple-gold/20 text-center opacity-60 text-xs font-serif text-temple-red">
-             x402 AI Lucky Shrine • {new Date().toLocaleDateString()}
+        <div className="mt-8 pt-4 border-t border-temple-gold/20 text-center opacity-60 text-xs font-serif text-temple-red space-y-1">
+          <div>x402 AI Lucky Shrine • 2026/2/18</div>
+          <div>https://www.agent-verse.live/</div>
         </div>
       </div>
 
