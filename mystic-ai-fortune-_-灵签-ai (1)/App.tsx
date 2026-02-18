@@ -6,7 +6,6 @@ import { WhitepaperModal } from './components/WhitepaperModal';
 import { interpretFortune } from './services/geminiService';
 import { createPaymentSession } from './services/paymentService';
 
-const TREASURY = '0x4eCf92bAb524039Fc4027994b9D88C2DB2Ee05E6';
 const API_URL = 'https://xinchunsuanming.vercel.app';
 
 const App: React.FC = () => {
@@ -61,12 +60,6 @@ const App: React.FC = () => {
     const bodyObj: Record<string, string> = { category: category || 'career', language };
     if (wishText) bodyObj.wishText = wishText;
     return `npx awal x402 pay ${API_URL}/api/fortune/interpret -X POST -H "Content-Type: application/json" -d '${JSON.stringify(bodyObj)}'`;
-  };
-
-  // Generate PayLink URL
-  const getPayLink = () => {
-    const params = new URLSearchParams({ category: category || 'career', lang: language });
-    return `${API_URL}/?${params.toString()}`;
   };
 
   const handleCopy = (text: string, label: string) => {
@@ -220,57 +213,33 @@ const App: React.FC = () => {
               </div>
 
               <div className="p-6 space-y-4">
-                {/* Option 1: Wallet Connect & Pay */}
-                {hasWallet && (
-                  <button
-                    onClick={handleWalletPay}
-                    disabled={paymentLoading}
-                    className="w-full p-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-lg shadow hover:shadow-lg transition-all disabled:opacity-50 flex items-center gap-3"
-                  >
-                    <span className="text-2xl">🦊</span>
-                    <div className="text-left flex-1">
-                      <div>{language === 'zh-CN' ? '连接钱包支付' : language === 'zh-TW' ? '連接錢包支付' : 'Connect Wallet & Pay'}</div>
-                      <div className="text-xs opacity-70">MetaMask / Coinbase Wallet</div>
-                    </div>
-                    {paymentLoading && (
-                      <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                    )}
-                  </button>
-                )}
+                {/* Option 1: Wallet Connect & Pay (x402) */}
+                <button
+                  onClick={handleWalletPay}
+                  disabled={paymentLoading}
+                  className="w-full p-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-lg shadow hover:shadow-lg transition-all disabled:opacity-50 flex items-center gap-3"
+                >
+                  <span className="text-2xl">💳</span>
+                  <div className="text-left flex-1">
+                    <div>{language === 'zh-CN' ? 'x402 钱包支付' : language === 'zh-TW' ? 'x402 錢包支付' : 'x402 Wallet Payment'}</div>
+                    <div className="text-xs opacity-70">Coinbase Wallet / MetaMask — {language === 'zh-CN' ? '免 Gas 签名支付' : language === 'zh-TW' ? '免 Gas 簽名支付' : 'Gasless signature payment'}</div>
+                  </div>
+                  {paymentLoading && (
+                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  )}
+                </button>
 
-                {/* Option 2: PayLink — shareable payment URL */}
-                <div className="border-2 border-temple-gold/40 rounded-lg p-4 bg-white/50">
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="text-2xl">🔗</span>
-                    <div>
-                      <div className="font-bold text-temple-dark">PayLink</div>
-                      <div className="text-xs text-gray-500">
-                        {language === 'zh-CN' ? '分享支付链接' : language === 'zh-TW' ? '分享支付連結' : 'Share payment link'}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="bg-gray-100 p-3 rounded-lg text-sm font-mono break-all text-gray-700">
-                    {getPayLink()}
-                  </div>
-                  <button
-                    onClick={() => handleCopy(getPayLink(), 'paylink')}
-                    className="mt-3 w-full py-2 bg-temple-gold text-temple-dark font-bold rounded-lg hover:bg-yellow-500 transition-colors flex items-center justify-center gap-2"
-                  >
-                    {copied === 'paylink' ? (
-                      <>{language === 'zh-CN' ? '已复制!' : language === 'zh-TW' ? '已複製!' : 'Copied!'}</>
-                    ) : (
-                      <>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                        {language === 'zh-CN' ? '复制链接' : language === 'zh-TW' ? '複製連結' : 'Copy Link'}
-                      </>
-                    )}
-                  </button>
+                {/* Divider */}
+                <div className="flex items-center gap-2 text-gray-400 text-xs">
+                  <div className="flex-1 h-px bg-gray-300"></div>
+                  <span>AI Agent</span>
+                  <div className="flex-1 h-px bg-gray-300"></div>
                 </div>
 
-                {/* Option 3: Awal CLI for AI Agents */}
+                {/* Option 2: Awal CLI for AI Agents (x402) */}
                 <div className="border-2 border-temple-gold/40 rounded-lg p-4 bg-gray-50">
                   <div className="flex items-center gap-2 mb-3">
                     <span className="text-2xl">🤖</span>
@@ -304,13 +273,6 @@ const App: React.FC = () => {
                   </button>
                 </div>
 
-                {/* Treasury info */}
-                <div className="border border-gray-200 rounded-lg p-3 bg-white/50">
-                  <div className="text-xs text-gray-500 mb-1">
-                    {language === 'zh-CN' ? '收款地址 (Base 主网 USDC)' : language === 'zh-TW' ? '收款地址 (Base 主網 USDC)' : 'Treasury (Base Mainnet USDC)'}
-                  </div>
-                  <div className="font-mono text-xs text-temple-dark break-all">{TREASURY}</div>
-                </div>
               </div>
             </div>
           </div>
