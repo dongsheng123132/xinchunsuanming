@@ -2,6 +2,22 @@
   "buildCommand": "cd \"mystic-ai-fortune-_-灵签-ai (1)\" && npm install && npm run build",
   "outputDirectory": "mystic-ai-fortune-_-灵签-ai (1)/dist",
   "framework": "vite",
+  "functions": {
+    "api/**/*.ts": {
+      "maxDuration": 30
+    }
+  },
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, X-PAYMENT" },
+        { "key": "Access-Control-Expose-Headers", "value": "X-PAYMENT-REQUIREMENTS, X-PAYMENT-RESPONSE, x-payment-requirements, x-payment-response" }
+      ]
+    }
+  ],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" }
   ]
