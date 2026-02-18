@@ -1,13 +1,14 @@
-.DS_Store
-node_modules
-dist
-
-# env files
 .env
 .env.*
-
-# logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
+node_modules
+dist
+build
+*.log
+.git
+.vscode
+.idea
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+mystic-ai-fortune-_-灵签-ai/
