@@ -1,0 +1,8 @@
+{
+  "buildCommand": "cd \"mystic-ai-fortune-_-灵签-ai (1)\" && npm install && npm run build",
+  "outputDirectory": "mystic-ai-fortune-_-灵签-ai (1)/dist",
+  "framework": "vite",
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1" }
+  ]
+}

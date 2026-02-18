@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "dependencies": {
+    "openai": "^4.77.0"
+  },
+  "devDependencies": {
+    "@vercel/node": "^5.0.0"
+  }
+}
