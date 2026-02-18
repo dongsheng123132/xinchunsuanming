@@ -78,7 +78,7 @@ const App: React.FC = () => {
     }
     setCreatingCharge(true);
     try {
-      const res = await fetch(`${API_URL}/api/commerce/create-charge`, {
+      const res = await fetch(`${API_URL}/api/create-charge`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ category, language }),
