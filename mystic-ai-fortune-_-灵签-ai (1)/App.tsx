@@ -4,7 +4,6 @@ import { TRANSLATIONS } from './translations';
 import { ResultCard } from './components/ResultCard';
 import { WhitepaperModal } from './components/WhitepaperModal';
 
-const COMMERCE_URL = 'https://commerce.coinbase.com/pay/acca2bed-2baf-4357-a2fd-f1c36d09634d/payment-method';
 const API_URL = 'https://xinchunsuanming.vercel.app';
 
 const App: React.FC = () => {
@@ -18,6 +17,8 @@ const App: React.FC = () => {
   const [copied, setCopied] = useState('');
   const [commerceOpened, setCommerceOpened] = useState(false);
   const [interpreting, setInterpreting] = useState(false);
+  const [chargeId, setChargeId] = useState<string | null>(null);
+  const [creatingCharge, setCreatingCharge] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -67,28 +68,65 @@ const App: React.FC = () => {
     setTimeout(() => setCopied(''), 2000);
   };
 
-  // Open Coinbase Commerce payment page
-  const handleCommercePay = () => {
-    window.open(COMMERCE_URL, '_blank');
-    setCommerceOpened(true);
+  // Create dynamic Commerce charge and open payment page
+  const handleCommercePay = async () => {
+    if (chargeId) {
+      // Already created a charge, just reopen
+      window.open(`https://commerce.coinbase.com/charges/${chargeId}`, '_blank');
+      setCommerceOpened(true);
+      return;
+    }
+    setCreatingCharge(true);
+    try {
+      const res = await fetch(`${API_URL}/api/commerce/create-charge`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ category, language }),
+      });
+      if (!res.ok) throw new Error(`Failed to create charge: ${res.status}`);
+      const data = await res.json();
+      setChargeId(data.charge_id);
+      window.open(data.hosted_url, '_blank');
+      setCommerceOpened(true);
+    } catch (e: any) {
+      console.error(e);
+      alert(e.message || 'Failed to create payment');
+    } finally {
+      setCreatingCharge(false);
+    }
   };
 
-  // After Commerce payment confirmed by user, fetch fortune
+  // After Commerce payment confirmed by user, verify and fetch fortune
   const handleCommerceConfirm = async () => {
+    if (!chargeId) {
+      alert(language === 'zh-CN' ? '请先完成支付' : language === 'zh-TW' ? '請先完成支付' : 'Please complete payment first');
+      return;
+    }
     setShowPayModal(false);
     setCommerceOpened(false);
     setAppState(AppState.INTERPRETING);
     setInterpreting(true);
     try {
-      const res = await fetch('/api/fortune/interpret-commerce', {
+      const res = await fetch(`${API_URL}/api/fortune/interpret-commerce`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ category, language, wishText }),
+        body: JSON.stringify({ charge_id: chargeId, category, language, wishText }),
       });
-      if (!res.ok) throw new Error(`Server error: ${res.status}`);
       const result = await res.json();
+      if (!res.ok) {
+        // Payment not verified
+        if (res.status === 402) {
+          alert(result.message || (language === 'zh-CN' ? '未检测到支付，请先完成支付' : 'Payment not detected'));
+          setAppState(AppState.PAYMENT);
+          setShowPayModal(true);
+          setCommerceOpened(true);
+          return;
+        }
+        throw new Error(result.error || `Server error: ${res.status}`);
+      }
       setFortune(result);
       setAppState(AppState.RESULT);
+      setChargeId(null); // Reset for next use
     } catch (e: any) {
       console.error(e);
       alert(e.message || 'Interpretation failed');
@@ -109,6 +147,7 @@ const App: React.FC = () => {
     setCategory(null);
     setAppState(AppState.IDLE);
     setCommerceOpened(false);
+    setChargeId(null);
   };
 
   return (
@@ -229,11 +268,22 @@ const App: React.FC = () => {
                 {!commerceOpened ? (
                   <button
                     onClick={handleCommercePay}
-                    className="w-full p-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-lg shadow hover:shadow-lg transition-all flex items-center gap-3"
+                    disabled={creatingCharge}
+                    className="w-full p-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-lg shadow hover:shadow-lg transition-all flex items-center gap-3 disabled:opacity-50"
                   >
-                    <span className="text-2xl">💳</span>
+                    {creatingCharge ? (
+                      <svg className="animate-spin h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    ) : (
+                      <span className="text-2xl">💳</span>
+                    )}
                     <div className="text-left flex-1">
-                      <div>{language === 'zh-CN' ? 'Coinbase Commerce 支付' : language === 'zh-TW' ? 'Coinbase Commerce 支付' : 'Pay with Coinbase Commerce'}</div>
+                      <div>{creatingCharge
+                        ? (language === 'zh-CN' ? '创建支付订单...' : language === 'zh-TW' ? '建立支付訂單...' : 'Creating payment...')
+                        : (language === 'zh-CN' ? 'Coinbase Commerce 支付' : language === 'zh-TW' ? 'Coinbase Commerce 支付' : 'Pay with Coinbase Commerce')
+                      }</div>
                       <div className="text-xs opacity-70">{language === 'zh-CN' ? '支持多种加密货币，由 Coinbase 处理' : language === 'zh-TW' ? '支援多種加密貨幣，由 Coinbase 處理' : 'Multiple cryptocurrencies, powered by Coinbase'}</div>
                     </div>
                   </button>

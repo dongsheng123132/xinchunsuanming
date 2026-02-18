@@ -8,17 +8,63 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   try {
-    const { category, language = "zh-CN", wishText } = req.body || {};
+    const { charge_id, category, language = "zh-CN", wishText } = req.body || {};
+    if (!charge_id) {
+      return res.status(400).json({ error: "Missing charge_id" });
+    }
     if (!category) {
       return res.status(400).json({ error: "Missing category" });
     }
 
-    // Generate stick numbers from timestamp + random (Commerce payment has no nonce)
-    const seed = Date.now() ^ Math.floor(Math.random() * 0xffffffff);
+    // Verify Commerce charge is actually paid
+    const apiKey = process.env.COMMERCE_API_KEY;
+    if (!apiKey) {
+      return res.status(500).json({ error: "Commerce API key not configured" });
+    }
+
+    const chargeRes = await fetch(`https://api.commerce.coinbase.com/charges/${charge_id}`, {
+      headers: {
+        "X-CC-Api-Key": apiKey,
+        "X-CC-Version": "2018-03-22",
+      },
+    });
+
+    if (!chargeRes.ok) {
+      console.error("Commerce verify error:", chargeRes.status, await chargeRes.text());
+      return res.status(400).json({ error: "Invalid charge_id" });
+    }
+
+    const chargeData = await chargeRes.json();
+    const charge = chargeData.data;
+
+    // Check payment status from timeline
+    const timeline = charge.timeline || [];
+    const isPaid = timeline.some(
+      (ev: { status: string }) => ev.status === "COMPLETED" || ev.status === "RESOLVED"
+    );
+
+    if (!isPaid) {
+      return res.status(402).json({
+        error: "Payment not completed",
+        status: timeline[timeline.length - 1]?.status || "UNKNOWN",
+        message: language === "zh-CN"
+          ? "尚未检测到支付，请先在 Coinbase Commerce 完成支付"
+          : language === "zh-TW"
+          ? "尚未偵測到支付，請先在 Coinbase Commerce 完成支付"
+          : "Payment not detected. Please complete payment in Coinbase Commerce first.",
+      });
+    }
+
+    // Derive stick numbers from charge code (deterministic per payment)
+    const chargeCode = charge.code || charge_id;
+    let hash = 0;
+    for (let i = 0; i < chargeCode.length; i++) {
+      hash = ((hash << 5) - hash + chargeCode.charCodeAt(i)) | 0;
+    }
     const stickNumbers = [
-      (seed % 100) + 1,
-      ((seed >> 8) % 100) + 1,
-      ((seed >> 16) % 100) + 1,
+      (Math.abs(hash) % 100) + 1,
+      (Math.abs(hash >> 8) % 100) + 1,
+      (Math.abs(hash >> 16) % 100) + 1,
     ];
 
     // Call AI
