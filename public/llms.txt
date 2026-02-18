@@ -1,16 +1,15 @@
 # AI Fortune Oracle
-> Pay 0.1 USDC via x402 on Base, draw 3 fortune sticks, get AI-powered Lunar New Year interpretation.
+> Pay 0.1 USDC via x402 on Base, get AI-powered Lunar New Year fortune interpretation. Stick numbers derived from payment hash.
 
 ## Docs
 - [Skill Doc](https://xinchunsuanming.vercel.app/skill.md): Full API documentation for AI agents
 - [Health Check](https://xinchunsuanming.vercel.app/api/health): Service status
 
 ## Quick Start
-npx awal x402 pay https://xinchunsuanming.vercel.app/api/fortune/interpret -X POST -H "Content-Type: application/json" -d '{"stickNumbers":[42,17,88],"category":"career","language":"zh-CN"}'
+npx awal x402 pay https://xinchunsuanming.vercel.app/api/fortune/interpret -X POST -H "Content-Type: application/json" -d '{"category":"career","language":"zh-CN"}'
 
 ## API Endpoints
-- POST /api/fortune/interpret — 0.1 USDC via x402, AI fortune interpretation
-- POST /api/fortune/interpret-free — Free testing endpoint
+- POST /api/fortune/interpret — 0.1 USDC via x402, AI fortune interpretation (stick numbers from payment)
 - GET /api/health — Health check
-- GET /api/skill — Skill documentation (JSON)
+- GET /api/skill — Skill documentation
 - GET /skill.md — Skill documentation (Markdown)

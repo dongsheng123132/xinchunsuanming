@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AppState, FortuneResult, Language, WishCategory } from './types';
 import { TRANSLATIONS } from './translations';
-import { StickCylinder } from './components/StickCylinder';
 import { ResultCard } from './components/ResultCard';
 import { WhitepaperModal } from './components/WhitepaperModal';
 import { interpretFortune } from './services/geminiService';
@@ -16,13 +15,10 @@ const App: React.FC = () => {
   const [category, setCategory] = useState<WishCategory | null>(null);
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [language, setLanguage] = useState<Language>('zh-CN');
-  const [stickCount, setStickCount] = useState(0);
-  const [collectedSticks, setCollectedSticks] = useState<number[]>([]);
   const [isWhitepaperOpen, setIsWhitepaperOpen] = useState(false);
   const [wishText, setWishText] = useState('');
   const [showPayModal, setShowPayModal] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [walletConnected, setWalletConnected] = useState(false);
+  const [copied, setCopied] = useState('');
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -40,6 +36,14 @@ const App: React.FC = () => {
             console.error("Failed to parse share link", e);
         }
     }
+    // Auto-select category from URL param
+    const cat = params.get('category') as WishCategory | null;
+    if (cat && ['career','wealth','love','health','family'].includes(cat)) {
+      setCategory(cat);
+      const lang = params.get('lang') as Language | null;
+      if (lang) setLanguage(lang);
+      setAppState(AppState.PAYMENT);
+    }
   }, []);
 
   const t = TRANSLATIONS[language];
@@ -52,81 +56,46 @@ const App: React.FC = () => {
     setAppState(AppState.PAYMENT);
   };
 
-  // Generate Awal CLI command
+  // Generate Awal CLI command (no stickNumbers — server derives from payment nonce)
   const getAwalCommand = () => {
-    const body = JSON.stringify({
-      stickNumbers: [Math.floor(Math.random()*100)+1, Math.floor(Math.random()*100)+1, Math.floor(Math.random()*100)+1],
-      category: category || 'career',
-      language,
-      wishText: wishText || undefined,
-    });
-    return `npx awal x402 pay ${API_URL}/api/fortune/interpret -X POST -H "Content-Type: application/json" -d '${body}'`;
+    const bodyObj: Record<string, string> = { category: category || 'career', language };
+    if (wishText) bodyObj.wishText = wishText;
+    return `npx awal x402 pay ${API_URL}/api/fortune/interpret -X POST -H "Content-Type: application/json" -d '${JSON.stringify(bodyObj)}'`;
   };
 
-  const handleCopyAwal = () => {
-    navigator.clipboard.writeText(getAwalCommand());
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  // Generate PayLink URL
+  const getPayLink = () => {
+    const params = new URLSearchParams({ category: category || 'career', lang: language });
+    return `${API_URL}/?${params.toString()}`;
   };
 
-  // Try wallet connect
-  const handleWalletConnect = async () => {
+  const handleCopy = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(label);
+    setTimeout(() => setCopied(''), 2000);
+  };
+
+  // Wallet connect → pay → get fortune
+  const handleWalletPay = async () => {
     setPaymentLoading(true);
     try {
       await createPaymentSession();
-      setWalletConnected(true);
       setShowPayModal(false);
-      setAppState(AppState.SHAKING);
-      setStickCount(0);
-      setCollectedSticks([]);
+      setAppState(AppState.INTERPRETING);
+      const result = await interpretFortune(category!, language, wishText);
+      setFortune(result);
+      setAppState(AppState.RESULT);
     } catch (e: any) {
-      alert(e.message || 'Wallet connection failed');
+      console.error(e);
+      alert(e.message || 'Payment or interpretation failed');
+      setAppState(AppState.PAYMENT);
     } finally {
       setPaymentLoading(false);
     }
   };
 
-  // Skip payment — use free endpoint
-  const handleSkipPayment = () => {
-    setShowPayModal(false);
-    setWalletConnected(false);
-    setAppState(AppState.SHAKING);
-    setStickCount(0);
-    setCollectedSticks([]);
-  };
-
   const handlePayment = () => {
     setShowPayModal(true);
-  };
-
-  const handleShake = () => {
-    if (appState !== AppState.SHAKING) return;
-    const duration = 2000;
-    const shakeElement = document.getElementById('shaker-container');
-    if(shakeElement) shakeElement.classList.add('animate-shake');
-
-    setTimeout(async () => {
-        if(shakeElement) shakeElement.classList.remove('animate-shake');
-        const newStick = Math.floor(Math.random() * 100) + 1;
-        const newCollection = [...collectedSticks, newStick];
-        setCollectedSticks(newCollection);
-        const nextCount = stickCount + 1;
-        setStickCount(nextCount);
-
-        if (nextCount >= 3) {
-            setAppState(AppState.INTERPRETING);
-            try {
-                const result = await interpretFortune(newCollection, category!, language, wishText);
-                setFortune(result);
-                setAppState(AppState.RESULT);
-            } catch (e) {
-                console.error(e);
-                setAppState(AppState.SHAKING);
-                setStickCount(0);
-                setCollectedSticks([]);
-            }
-        }
-    }, duration);
   };
 
   const handleReset = () => {
@@ -134,9 +103,6 @@ const App: React.FC = () => {
     setFortune(null);
     setCategory(null);
     setAppState(AppState.IDLE);
-    setStickCount(0);
-    setCollectedSticks([]);
-    setWalletConnected(false);
   };
 
   const hasWallet = typeof window !== 'undefined' && !!(window as any).ethereum;
@@ -227,7 +193,10 @@ const App: React.FC = () => {
                     <div className="text-center">
                       <div className="w-16 h-16 mx-auto mb-4 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-2xl shadow-lg">C</div>
                       <p className="mb-6 text-gray-600 font-serif">{t.payDesc}</p>
-                      <div className="text-4xl font-bold mb-8 text-temple-red font-mono text-center">0.1 USDC</div>
+                      <div className="text-4xl font-bold mb-4 text-temple-red font-mono text-center">0.1 USDC</div>
+                      <p className="text-xs text-gray-500 mb-6">
+                        {language === 'zh-CN' ? '签号由支付凭证自动生成，每次支付对应唯一签文' : language === 'zh-TW' ? '簽號由支付憑證自動生成，每次支付對應唯一簽文' : 'Stick numbers derived from payment — each payment generates a unique fortune'}
+                      </p>
                       <button
                           onClick={handlePayment}
                           className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-lg shadow hover:shadow-lg transition-all flex justify-center items-center gap-2"
@@ -242,8 +211,8 @@ const App: React.FC = () => {
         {/* PAYMENT MODAL */}
         {showPayModal && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-            <div className="bg-temple-paper w-full max-w-lg rounded-xl overflow-hidden shadow-2xl border-4 border-temple-gold">
-              <div className="bg-temple-red p-4 flex justify-between items-center">
+            <div className="bg-temple-paper w-full max-w-lg rounded-xl overflow-hidden shadow-2xl border-4 border-temple-gold max-h-[90vh] overflow-y-auto">
+              <div className="bg-temple-red p-4 flex justify-between items-center sticky top-0 z-10">
                 <h3 className="text-white font-bold text-lg">
                   {language === 'zh-CN' ? '选择支付方式' : language === 'zh-TW' ? '選擇支付方式' : 'Choose Payment Method'}
                 </h3>
@@ -251,10 +220,10 @@ const App: React.FC = () => {
               </div>
 
               <div className="p-6 space-y-4">
-                {/* Option 1: Wallet Connect */}
+                {/* Option 1: Wallet Connect & Pay */}
                 {hasWallet && (
                   <button
-                    onClick={handleWalletConnect}
+                    onClick={handleWalletPay}
                     disabled={paymentLoading}
                     className="w-full p-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-lg shadow hover:shadow-lg transition-all disabled:opacity-50 flex items-center gap-3"
                   >
@@ -272,7 +241,36 @@ const App: React.FC = () => {
                   </button>
                 )}
 
-                {/* Option 2: Awal CLI for AI Agents */}
+                {/* Option 2: PayLink — shareable payment URL */}
+                <div className="border-2 border-temple-gold/40 rounded-lg p-4 bg-white/50">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-2xl">🔗</span>
+                    <div>
+                      <div className="font-bold text-temple-dark">PayLink</div>
+                      <div className="text-xs text-gray-500">
+                        {language === 'zh-CN' ? '分享支付链接' : language === 'zh-TW' ? '分享支付連結' : 'Share payment link'}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-gray-100 p-3 rounded-lg text-sm font-mono break-all text-gray-700">
+                    {getPayLink()}
+                  </div>
+                  <button
+                    onClick={() => handleCopy(getPayLink(), 'paylink')}
+                    className="mt-3 w-full py-2 bg-temple-gold text-temple-dark font-bold rounded-lg hover:bg-yellow-500 transition-colors flex items-center justify-center gap-2"
+                  >
+                    {copied === 'paylink' ? (
+                      <>{language === 'zh-CN' ? '已复制!' : language === 'zh-TW' ? '已複製!' : 'Copied!'}</>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                        {language === 'zh-CN' ? '复制链接' : language === 'zh-TW' ? '複製連結' : 'Copy Link'}
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* Option 3: Awal CLI for AI Agents */}
                 <div className="border-2 border-temple-gold/40 rounded-lg p-4 bg-gray-50">
                   <div className="flex items-center gap-2 mb-3">
                     <span className="text-2xl">🤖</span>
@@ -286,11 +284,16 @@ const App: React.FC = () => {
                   <div className="bg-gray-900 text-green-400 p-3 rounded-lg text-xs font-mono overflow-x-auto whitespace-pre-wrap break-all max-h-32 overflow-y-auto">
                     {getAwalCommand()}
                   </div>
+                  <div className="mt-2 text-xs text-gray-500">
+                    <a href={`${API_URL}/skill.md`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">
+                      {language === 'zh-CN' ? '查看完整 AI 文档 (skill.md)' : language === 'zh-TW' ? '查看完整 AI 文檔 (skill.md)' : 'View full AI docs (skill.md)'}
+                    </a>
+                  </div>
                   <button
-                    onClick={handleCopyAwal}
+                    onClick={() => handleCopy(getAwalCommand(), 'awal')}
                     className="mt-3 w-full py-2 bg-temple-dark text-temple-gold font-bold rounded-lg hover:bg-black transition-colors flex items-center justify-center gap-2"
                   >
-                    {copied ? (
+                    {copied === 'awal' ? (
                       <>{language === 'zh-CN' ? '已复制!' : language === 'zh-TW' ? '已複製!' : 'Copied!'}</>
                     ) : (
                       <>
@@ -304,49 +307,13 @@ const App: React.FC = () => {
                 {/* Treasury info */}
                 <div className="border border-gray-200 rounded-lg p-3 bg-white/50">
                   <div className="text-xs text-gray-500 mb-1">
-                    {language === 'zh-CN' ? '收款地址 (Base 主网)' : language === 'zh-TW' ? '收款地址 (Base 主網)' : 'Treasury (Base Mainnet)'}
+                    {language === 'zh-CN' ? '收款地址 (Base 主网 USDC)' : language === 'zh-TW' ? '收款地址 (Base 主網 USDC)' : 'Treasury (Base Mainnet USDC)'}
                   </div>
                   <div className="font-mono text-xs text-temple-dark break-all">{TREASURY}</div>
                 </div>
-
-                {/* Divider */}
-                <div className="flex items-center gap-2 text-gray-400 text-xs">
-                  <div className="flex-1 h-px bg-gray-300"></div>
-                  <span>{language === 'zh-CN' ? '或者' : language === 'zh-TW' ? '或者' : 'or'}</span>
-                  <div className="flex-1 h-px bg-gray-300"></div>
-                </div>
-
-                {/* Skip — free version */}
-                <button
-                  onClick={handleSkipPayment}
-                  className="w-full py-3 text-gray-500 hover:text-temple-red text-sm underline transition-colors"
-                >
-                  {language === 'zh-CN' ? '跳过支付，使用免费版本 (基础签文)' : language === 'zh-TW' ? '跳過支付，使用免費版本 (基礎籤文)' : 'Skip payment, use free version (basic fortune)'}
-                </button>
               </div>
             </div>
           </div>
-        )}
-
-        {/* SHAKING */}
-        {appState === AppState.SHAKING && (
-            <div className="flex flex-col items-center space-y-8 animate-fade-in w-full">
-                <div id="shaker-container" className="transition-transform">
-                     <StickCylinder isShaking={document.getElementById('shaker-container')?.classList.contains('animate-shake') || false} />
-                </div>
-                <div className="text-center z-20">
-                    <h3 className="text-2xl text-temple-gold font-serif mb-2">{t.shakeTitle}</h3>
-                    <p className="text-temple-paper/70 mb-6">{t.shakeInstruction(stickCount + 1)}</p>
-                    <div className="flex gap-2 justify-center mb-6">
-                        {[0, 1, 2].map(i => (
-                            <div key={i} className={`w-3 h-3 rounded-full ${i < stickCount ? 'bg-temple-gold' : 'bg-gray-600'}`}></div>
-                        ))}
-                    </div>
-                    <button onClick={handleShake} className="px-10 py-4 bg-temple-red border-2 border-temple-gold text-temple-gold font-bold text-xl rounded-full shadow-[0_0_20px_rgba(218,165,32,0.4)] hover:bg-red-900 hover:scale-105 transition-all active:scale-95">
-                        {t.shakeBtn}
-                    </button>
-                </div>
-            </div>
         )}
 
         {/* INTERPRETING */}
@@ -354,11 +321,9 @@ const App: React.FC = () => {
             <div className="text-center animate-fade-in bg-black/40 p-10 rounded-xl backdrop-blur-sm border border-temple-gold/30">
                 <div className="w-20 h-20 border-4 border-temple-gold border-t-transparent rounded-full animate-spin mx-auto mb-8"></div>
                 <h2 className="text-3xl text-temple-gold font-calligraphy mb-4 tracking-widest">{t.interpreting}</h2>
-                <div className="flex justify-center gap-4 mt-4 opacity-70">
-                    {collectedSticks.map((num) => (
-                        <span key={num} className="text-temple-paper font-mono">#{num}</span>
-                    ))}
-                </div>
+                <p className="text-temple-paper/60 text-sm">
+                  {language === 'zh-CN' ? '支付已确认，大师正在为您抽签解签...' : language === 'zh-TW' ? '支付已確認，大師正在為您抽籤解籤...' : 'Payment confirmed, the master is drawing your fortune sticks...'}
+                </p>
             </div>
         )}
 

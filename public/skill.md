@@ -1,7 +1,7 @@
 ---
 name: ai-fortune-oracle
-version: 1.0.0
-description: Pay 0.1 USDC via x402, draw 3 fortune sticks, get AI-powered Lunar New Year interpretation. 支付 0.1 USDC 抽签解签。
+version: 1.1.0
+description: Pay 0.1 USDC via x402, get AI-powered Lunar New Year fortune interpretation. Stick numbers derived from payment hash. 支付 0.1 USDC，签号由支付凭证生成，AI 大师解签。
 homepage: https://xinchunsuanming.vercel.app
 api_base: https://xinchunsuanming.vercel.app/api
 auth: x402
@@ -14,16 +14,16 @@ metadata: {"emoji":"🔮","category":"ai-service","min_price":"$0.10"}
 
 # 🔮 AI Fortune Oracle — Skill Doc
 
-> **TL;DR for AI Agents:** Pay 0.1 USDC on Base → get AI fortune reading. One command:
+> **TL;DR for AI Agents:** Pay 0.1 USDC on Base → get AI fortune reading. Stick numbers are automatically derived from your payment hash. One command:
 > ```
-> npx awal x402 pay https://xinchunsuanming.vercel.app/api/fortune/interpret -X POST -H "Content-Type: application/json" -d '{"stickNumbers":[42,17,88],"category":"career","language":"zh-CN"}'
+> npx awal x402 pay https://xinchunsuanming.vercel.app/api/fortune/interpret -X POST -H "Content-Type: application/json" -d '{"category":"career","language":"zh-CN"}'
 > ```
 
 ---
 
 ## What Is This
 
-AI 新春福签 is a Lunar New Year fortune oracle. You draw 3 fortune sticks (1-100), pick a category, and an AI Taoist master interprets your fortune with a poem, luck level, explanation, and advice. Every reading costs **0.1 USDC** via x402 on **Base mainnet** — no payment, no fortune. The AI only speaks after receiving your offering.
+AI 新春福签 is a Lunar New Year fortune oracle. You pick a category, pay 0.1 USDC, and the server derives 3 unique fortune stick numbers from your payment transaction nonce. An AI Taoist master then interprets your fortune with a poem, luck level, explanation, and advice. Every reading costs **0.1 USDC** via x402 on **Base mainnet** — no payment, no fortune. The AI only speaks after receiving your offering.
 
 ---
 
@@ -56,7 +56,7 @@ Need testnet/mainnet USDC? Get from https://faucet.circle.com/ (testnet) or buy 
 npx awal x402 pay https://xinchunsuanming.vercel.app/api/fortune/interpret \
   -X POST \
   -H "Content-Type: application/json" \
-  -d '{"stickNumbers":[42,17,88],"category":"career","language":"zh-CN"}'
+  -d '{"category":"career","language":"zh-CN"}'
 ```
 
 **Response (200 — after 0.1 USDC payment auto-settled):**
@@ -78,20 +78,21 @@ npx awal x402 pay https://xinchunsuanming.vercel.app/api/fortune/interpret \
 }
 ```
 
+> **Note:** `stickNumbers` in the response are derived from your payment nonce — each payment produces a unique set of fortune sticks.
+
 ---
 
 ## Complete API Reference
 
 ### POST `/api/fortune/interpret` (x402 Protected — 0.1 USDC)
 
-The main endpoint. Returns 402 if no payment, 200 with fortune after payment verified.
+The main endpoint. Returns 402 if no payment, 200 with fortune after payment verified. Stick numbers are derived server-side from the payment transaction nonce.
 
 **Request:**
 ```bash
 curl -X POST https://xinchunsuanming.vercel.app/api/fortune/interpret \
   -H "Content-Type: application/json" \
   -d '{
-    "stickNumbers": [42, 17, 88],
     "category": "career",
     "language": "zh-CN",
     "wishText": "希望今年顺利完成职业转型"
@@ -102,7 +103,6 @@ curl -X POST https://xinchunsuanming.vercel.app/api/fortune/interpret \
 
 | Param | Type | Required | Description | Example |
 |-------|------|----------|-------------|---------|
-| `stickNumbers` | `int[]` | yes | Exactly 3 numbers, each 1-100 | `[42, 17, 88]` |
 | `category` | `string` | yes | One of: `career`, `wealth`, `love`, `health`, `family` | `"career"` |
 | `language` | `string` | no | `zh-CN` (default), `zh-TW`, `en` | `"zh-CN"` |
 | `wishText` | `string` | no | Personal wish for tailored interpretation | `"希望今年..."` |
@@ -143,34 +143,9 @@ Decoded `X-Payment-Requirements`:
 
 | Status | Error | Cause |
 |--------|-------|-------|
-| 400 | `invalid_request` | stickNumbers not array of 3, or missing category |
+| 400 | `invalid_request` | Missing category field |
 | 402 | `payment_required` | No X-PAYMENT header or payment invalid |
 | 500 | `server_error` | AI service unavailable (returns fallback fortune) |
-
----
-
-### POST `/api/fortune/interpret-free` (No Payment — Testing Only)
-
-Same request/response format but free. Always returns `"x402_paid": false`.
-
-**Request:**
-```bash
-curl -X POST https://xinchunsuanming.vercel.app/api/fortune/interpret-free \
-  -H "Content-Type: application/json" \
-  -d '{"stickNumbers":[42,17,88],"category":"career","language":"zh-CN"}'
-```
-
-**Response (200):**
-```json
-{
-  "stickNumbers": [42, 17, 88],
-  "mainPoem": ["新春迎新福，", "三星照九霄。", "心安万事顺，", "福运自来潮。"],
-  "overallLuck": "吉 · 上签",
-  "explanation": "三签合观，运势向好。",
-  "advice": "宜怀信心与乐观之心前行。",
-  "x402_paid": false
-}
-```
 
 ---
 
@@ -221,6 +196,7 @@ curl https://xinchunsuanming.vercel.app/skill.md
 | **Protocol** | x402 — EIP-3009 `transferWithAuthorization` |
 | **Gas Fee** | None — payment is a gasless signature |
 | **Facilitator** | Coinbase CDP (auto-settled on-chain) |
+| **Stick Numbers** | Derived from payment nonce (unique per transaction) |
 
 ---
 
@@ -239,24 +215,24 @@ curl https://xinchunsuanming.vercel.app/skill.md
 echo "=== Checking wallet ==="
 npx awal balance
 
-# 2. Generate random stick numbers
-S1=$((RANDOM % 100 + 1))
-S2=$((RANDOM % 100 + 1))
-S3=$((RANDOM % 100 + 1))
-echo "=== Drawing sticks: $S1, $S2, $S3 ==="
+# 2. Pick a category
+CATEGORY="career"  # career | wealth | love | health | family
+echo "=== Category: $CATEGORY ==="
 
 # 3. Pay 0.1 USDC and get fortune (one command)
+# Stick numbers are derived from your payment — no need to specify them!
 RESULT=$(npx awal x402 pay \
   https://xinchunsuanming.vercel.app/api/fortune/interpret \
   -X POST \
   -H "Content-Type: application/json" \
-  -d "{\"stickNumbers\":[$S1,$S2,$S3],\"category\":\"career\",\"language\":\"zh-CN\"}")
+  -d "{\"category\":\"$CATEGORY\",\"language\":\"zh-CN\"}")
 
 echo "=== Fortune Result ==="
 echo "$RESULT" | jq .
 
 # 4. Extract key fields
 echo ""
+echo "Sticks:  $(echo $RESULT | jq -r '.stickNumbers | join(", ")')"
 echo "Luck:    $(echo $RESULT | jq -r '.overallLuck')"
 echo "Poem:    $(echo $RESULT | jq -r '.mainPoem[]')"
 echo "Advice:  $(echo $RESULT | jq -r '.advice')"
@@ -280,11 +256,11 @@ registerExactEvmScheme(client, { signer: account });
 const pay = wrapFetchWithPayment(fetch, client);
 
 // Draw fortune — auto-pays 0.1 USDC on 402
+// No need to specify stickNumbers — they're derived from your payment!
 const res = await pay("https://xinchunsuanming.vercel.app/api/fortune/interpret", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    stickNumbers: [42, 17, 88],
     category: "career",
     language: "zh-CN",
     wishText: "希望今年事业顺利",
@@ -292,6 +268,7 @@ const res = await pay("https://xinchunsuanming.vercel.app/api/fortune/interpret"
 });
 
 const fortune = await res.json();
+console.log(`Sticks: ${fortune.stickNumbers.join(", ")}`);
 console.log(fortune.mainPoem.join("\n"));
 ```
 
@@ -301,8 +278,7 @@ console.log(fortune.mainPoem.join("\n"));
 
 | Method | Endpoint | Auth | Price | Description |
 |--------|----------|------|-------|-------------|
-| POST | `/api/fortune/interpret` | x402 | $0.10 | AI fortune interpretation (paid) |
-| POST | `/api/fortune/interpret-free` | none | free | AI fortune interpretation (testing) |
+| POST | `/api/fortune/interpret` | x402 | $0.10 | AI fortune interpretation (stick numbers from payment) |
 | GET | `/api/health` | none | free | Service health check |
 | GET | `/api/skill` | none | free | This skill documentation |
 | GET | `/skill.md` | none | free | This skill documentation (static) |

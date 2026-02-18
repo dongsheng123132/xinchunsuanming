@@ -74,21 +74,42 @@ async function doInit() {
   // Route handler (runs after x402 middleware verifies payment)
   app.post("/api/fortune/interpret", async (req, res) => {
     try {
-      const { stickNumbers, category, language = "zh-CN", wishText } = req.body || {};
-      if (!stickNumbers || !category) {
-        return res.status(400).json({ error: "Missing stickNumbers or category" });
+      const { category, language = "zh-CN", wishText } = req.body || {};
+      if (!category) {
+        return res.status(400).json({ error: "Missing category" });
       }
 
-      // Extract payer from x402 payment header
+      // Extract payer and derive stick numbers from x402 payment nonce
       let payer = "unknown";
+      let stickNumbers: number[] = [];
       try {
         const xPayment = req.headers["x-payment"] as string;
         if (xPayment) {
           const decoded = JSON.parse(Buffer.from(xPayment, "base64").toString());
+          // Extract payer address
           if (decoded?.payload?.authorization?.from) payer = decoded.payload.authorization.from;
           else if (decoded?.authorization?.from) payer = decoded.authorization.from;
+          // Derive stick numbers from payment nonce (unique per payment)
+          const nonce = decoded?.payload?.authorization?.nonce || decoded?.authorization?.nonce || "";
+          const hex = nonce.replace("0x", "");
+          if (hex.length >= 24) {
+            stickNumbers = [
+              (parseInt(hex.slice(0, 8), 16) % 100) + 1,
+              (parseInt(hex.slice(8, 16), 16) % 100) + 1,
+              (parseInt(hex.slice(16, 24), 16) % 100) + 1,
+            ];
+          }
         }
       } catch {}
+      // Fallback if nonce parsing failed
+      if (stickNumbers.length !== 3) {
+        const seed = Date.now();
+        stickNumbers = [
+          (seed % 100) + 1,
+          ((seed >> 8) % 100) + 1,
+          ((seed >> 16) % 100) + 1,
+        ];
+      }
 
       // Call AI
       const { default: OpenAI } = await import("openai");
@@ -120,7 +141,7 @@ async function doInit() {
               content: `You are a wise Taoist master for Lunar New Year fortune interpretation.
 The user drew THREE fortune sticks regarding "${catLabel}".
 ${langInst}
-Respond with valid JSON only: {"stickNumbers":[],"mainPoem":[],"overallLuck":"","explanation":"","advice":""}`,
+Respond with valid JSON only: {"mainPoem":["line1","line2","line3","line4"],"overallLuck":"","explanation":"","advice":""}`,
             },
             {
               role: "user",
@@ -144,7 +165,6 @@ Respond with valid JSON only: {"stickNumbers":[],"mainPoem":[],"overallLuck":"",
         return res.json(result);
       } catch (aiErr) {
         console.error("AI error:", aiErr);
-        // Fallback
         return res.json({
           stickNumbers,
           mainPoem: language === "en"
