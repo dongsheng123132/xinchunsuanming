@@ -16,42 +16,43 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: "Missing category" });
     }
 
-    // Verify Commerce charge is actually paid
+    // Verify Commerce charge is actually paid (with retry for propagation delay)
     const apiKey = process.env.COMMERCE_API_KEY;
     if (!apiKey) {
       return res.status(500).json({ error: "Commerce API key not configured" });
     }
 
-    const chargeRes = await fetch(`https://api.commerce.coinbase.com/charges/${charge_id}`, {
-      headers: {
-        "X-CC-Api-Key": apiKey,
-        "X-CC-Version": "2018-03-22",
-      },
-    });
+    const PAID_STATUSES = ["COMPLETED", "RESOLVED", "PENDING"];
+    let charge: any = null;
+    let isPaid = false;
 
-    if (!chargeRes.ok) {
-      console.error("Commerce verify error:", chargeRes.status, await chargeRes.text());
-      return res.status(400).json({ error: "Invalid charge_id" });
+    for (let attempt = 0; attempt < 3; attempt++) {
+      if (attempt > 0) await new Promise(r => setTimeout(r, 3000));
+
+      const chargeRes = await fetch(`https://api.commerce.coinbase.com/charges/${charge_id}`, {
+        headers: { "X-CC-Api-Key": apiKey, "X-CC-Version": "2018-03-22" },
+      });
+
+      if (!chargeRes.ok) {
+        console.error("Commerce verify error:", chargeRes.status, await chargeRes.text());
+        return res.status(400).json({ error: "Invalid charge_id" });
+      }
+
+      charge = (await chargeRes.json()).data;
+      const timeline = charge.timeline || [];
+      isPaid = timeline.some((ev: { status: string }) => PAID_STATUSES.includes(ev.status));
+      if (isPaid) break;
     }
-
-    const chargeData = await chargeRes.json();
-    const charge = chargeData.data;
-
-    // Check payment status from timeline
-    const timeline = charge.timeline || [];
-    const isPaid = timeline.some(
-      (ev: { status: string }) => ev.status === "COMPLETED" || ev.status === "RESOLVED"
-    );
 
     if (!isPaid) {
       return res.status(402).json({
         error: "Payment not completed",
-        status: timeline[timeline.length - 1]?.status || "UNKNOWN",
+        status: (charge.timeline || []).slice(-1)[0]?.status || "UNKNOWN",
         message: language === "zh-CN"
-          ? "尚未检测到支付，请先在 Coinbase Commerce 完成支付"
+          ? "尚未检测到支付，请稍等几秒后再试"
           : language === "zh-TW"
-          ? "尚未偵測到支付，請先在 Coinbase Commerce 完成支付"
-          : "Payment not detected. Please complete payment in Coinbase Commerce first.",
+          ? "尚未偵測到支付，請稍等幾秒後再試"
+          : "Payment not detected yet. Please wait a few seconds and try again.",
       });
     }
 
