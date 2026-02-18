@@ -1,14 +1,31 @@
+# Environment & secrets
 .env
-.env.*
-node_modules
-dist
-build
+.env.local
+.env.production
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Logs
 *.log
-.git
+
+# IDE
 .vscode
 .idea
+
+# Python
 __pycache__
 *.pyc
 *.pyo
 *.pyd
+
+# OS
+.DS_Store
+
+# Legacy frontend without x402 (no longer used)
 mystic-ai-fortune-_-灵签-ai/

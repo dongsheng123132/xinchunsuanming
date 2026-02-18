@@ -12,6 +12,10 @@ export const TRANSLATIONS: Record<Language, {
   catLove: string;
   catHealth: string;
   catFamily: string;
+
+  wishTitle: string;
+  wishPlaceholder: string;
+  wishNote: string;
   
   payTitle: string;
   payDesc: string;
@@ -36,7 +40,6 @@ export const TRANSLATIONS: Record<Language, {
   whitepaperTitle: string;
   whitepaperContent: string;
 
-  // New Sharing Strings
   saveImageBtn: string;
   copyLinkBtn: string;
   linkCopied: string;
@@ -44,20 +47,24 @@ export const TRANSLATIONS: Record<Language, {
   shareModalDesc: string;
 }> = {
   en: {
-    appTitle: "AI New Year Fortune",
+    appTitle: "New Year Wish Sticks · Write your prayer on-chain with x402",
     whitepaperBtn: "Whitepaper",
     closeBtn: "Close",
     startBtn: "Enter Shrine",
     
-    categoryTitle: "Choose Your Wish",
-    catCareer: "Career & Success",
-    catWealth: "Wealth & Prosperity",
-    catLove: "Love & Marriage",
-    catHealth: "Health & Well-being",
-    catFamily: "Family Safety",
+    categoryTitle: "Choose a direction for your wish",
+    catCareer: "Career & Growth",
+    catWealth: "Wealth & Stability",
+    catLove: "Love & Relationships",
+    catHealth: "Health & Energy",
+    catFamily: "Family & Safety",
+
+    wishTitle: "Write down your New Year wish",
+    wishPlaceholder: "For example: I hope to smoothly change my career this year and find work I truly enjoy.",
+    wishNote: "This text will not be made public. It will be treated as your personal New Year prayer and used together with the three sticks to generate a more tailored blessing and guidance.",
     
     payTitle: "Offering of Sincerity",
-    payDesc: "Offer 0.1 USDC via x402 Protocol to unlock the oracle.",
+    payDesc: "Offer 0.1 USDC via x402 to seal this wish on-chain.",
     payBtn: "Offer 0.1 USDC",
     processing: "Processing Offering...",
     
@@ -96,20 +103,24 @@ export const TRANSLATIONS: Record<Language, {
     shareModalDesc: "Long press the image below to save it to your photos, then share it with friends!",
   },
   'zh-CN': {
-    appTitle: "AI 新春福籤",
+    appTitle: "新春心愿签 · 用 x402 为心愿上香",
     whitepaperBtn: "项目白皮书",
     closeBtn: "关闭",
     startBtn: "进入神坛",
     
-    categoryTitle: "请选择求籤方向",
+    categoryTitle: "请选择本次祈愿的方向",
     catCareer: "事业前程",
     catWealth: "财运亨通",
     catLove: "姻缘情感",
     catHealth: "身体健康",
     catFamily: "阖家平安",
+
+    wishTitle: "写下你的新春心愿",
+    wishPlaceholder: "例如：希望今年顺利完成职业转型，找到更喜欢的工作。",
+    wishNote: "这段话不会公开展示，但会与本次求签一起，被视作你写给这一年的认真祈愿。AI 解签时会结合「方向 + 心愿内容 + 三支签号」给出更贴近你当下状态的祝福与建议。",
     
     payTitle: "香火供奉",
-    payDesc: "通过 x402 协议支付 0.1 USDC 香火钱。",
+    payDesc: "通过 x402 协议支付 0.1 USDC 香火钱，将这份心愿郑重立为新春祈愿。",
     payBtn: "支付 0.1 USDC",
     processing: "确认香火中...",
     
@@ -150,20 +161,24 @@ export const TRANSLATIONS: Record<Language, {
     shareModalDesc: "长按下方图片保存到相册，分享到朋友圈集赞祈福！",
   },
   'zh-TW': {
-    appTitle: "AI 新春福籤",
+    appTitle: "新春心願籤 · 用 x402 為祈願上香",
     whitepaperBtn: "項目白皮書",
     closeBtn: "關閉",
     startBtn: "進入神壇",
     
-    categoryTitle: "請選擇求籤方向",
+    categoryTitle: "請選擇本次祈願的方向",
     catCareer: "事業前程",
     catWealth: "財運亨通",
     catLove: "姻緣情感",
     catHealth: "身體健康",
     catFamily: "闔家平安",
+
+    wishTitle: "寫下你的新春心願",
+    wishPlaceholder: "例如：希望今年順利完成職涯轉換，找到更喜歡的工作。",
+    wishNote: "這段話不會公開展示，但會與本次求籤一起，被視作你寫給這一年的認真祈願。AI 解籤時會結合「方向 + 心願內容 + 三支籤號」給出更貼近你當下狀態的祝福與建議。",
     
     payTitle: "香火供奉",
-    payDesc: "透過 x402 協議支付 0.1 USDC 香火錢。",
+    payDesc: "透過 x402 協議支付 0.1 USDC 香火錢，將這份心願鄭重立為新春祈願。",
     payBtn: "支付 0.1 USDC",
     processing: "確認香火中...",
     

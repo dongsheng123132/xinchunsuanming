@@ -13,9 +13,10 @@ const App: React.FC = () => {
   const [category, setCategory] = useState<WishCategory | null>(null);
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [language, setLanguage] = useState<Language>('zh-CN');
-  const [stickCount, setStickCount] = useState(0); // 0 to 3
+  const [stickCount, setStickCount] = useState(0);
   const [collectedSticks, setCollectedSticks] = useState<number[]>([]);
   const [isWhitepaperOpen, setIsWhitepaperOpen] = useState(false);
+  const [wishText, setWishText] = useState('');
 
   // Check for shared URL params on mount
   useEffect(() => {
@@ -47,6 +48,7 @@ const App: React.FC = () => {
 
   const selectCategory = (cat: WishCategory) => {
     setCategory(cat);
+    setWishText('');
     setAppState(AppState.PAYMENT);
   };
 
@@ -89,7 +91,7 @@ const App: React.FC = () => {
             // Done shaking
             setAppState(AppState.INTERPRETING);
             try {
-                const result = await interpretFortune(newCollection, category!, language);
+                const result = await interpretFortune(newCollection, category!, language, wishText);
                 setFortune(result);
                 setAppState(AppState.RESULT);
             } catch (e) {
@@ -205,30 +207,44 @@ const App: React.FC = () => {
                 <div className="bg-temple-red p-6 text-center border-b-4 border-yellow-600">
                     <h3 className="text-temple-gold font-bold text-xl font-serif tracking-widest">{t.payTitle}</h3>
                 </div>
-                <div className="p-8 text-temple-dark text-center">
-                    <div className="w-16 h-16 mx-auto mb-4 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-2xl shadow-lg">
-                        C
+                <div className="p-8 text-temple-dark">
+                    <div className="mb-6">
+                      <h4 className="text-lg font-serif mb-2 text-temple-red">{t.wishTitle}</h4>
+                      <textarea
+                        value={wishText}
+                        onChange={(e) => setWishText(e.target.value)}
+                        className="w-full h-24 p-3 border border-temple-gold/40 rounded-lg bg-temple-paper/60 focus:outline-none focus:border-temple-red text-sm resize-none"
+                        placeholder={t.wishPlaceholder}
+                      />
+                      <p className="mt-2 text-xs text-gray-500 leading-relaxed">
+                        {t.wishNote}
+                      </p>
                     </div>
-                    <p className="mb-6 text-gray-600 font-serif">{t.payDesc}</p>
-                    <div className="text-4xl font-bold mb-8 text-temple-red font-mono">0.1 USDC</div>
+                    <div className="text-center">
+                      <div className="w-16 h-16 mx-auto mb-4 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-2xl shadow-lg">
+                          C
+                      </div>
+                      <p className="mb-6 text-gray-600 font-serif">{t.payDesc}</p>
+                      <div className="text-4xl font-bold mb-8 text-temple-red font-mono text-center">0.1 USDC</div>
 
-                    <button 
-                        onClick={handlePayment}
-                        disabled={paymentLoading}
-                        className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-lg shadow hover:shadow-lg transition-all disabled:opacity-50 flex justify-center items-center gap-2"
-                    >
-                        {paymentLoading ? (
-                            <>
-                                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                {t.processing}
-                            </>
-                        ) : (
-                            t.payBtn
-                        )}
-                    </button>
+                      <button 
+                          onClick={handlePayment}
+                          disabled={paymentLoading}
+                          className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-lg shadow hover:shadow-lg transition-all disabled:opacity-50 flex justify-center items-center gap-2"
+                      >
+                          {paymentLoading ? (
+                              <>
+                                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                  </svg>
+                                  {t.processing}
+                              </>
+                          ) : (
+                              t.payBtn
+                          )}
+                      </button>
+                    </div>
                 </div>
             </div>
         )}
