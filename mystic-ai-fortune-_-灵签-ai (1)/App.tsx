@@ -3,21 +3,21 @@ import { AppState, FortuneResult, Language, WishCategory } from './types';
 import { TRANSLATIONS } from './translations';
 import { ResultCard } from './components/ResultCard';
 import { WhitepaperModal } from './components/WhitepaperModal';
-import { interpretFortune } from './services/geminiService';
-import { createPaymentSession } from './services/paymentService';
 
+const COMMERCE_URL = 'https://commerce.coinbase.com/pay/acca2bed-2baf-4357-a2fd-f1c36d09634d/payment-method';
 const API_URL = 'https://xinchunsuanming.vercel.app';
 
 const App: React.FC = () => {
   const [appState, setAppState] = useState<AppState>(AppState.IDLE);
   const [fortune, setFortune] = useState<FortuneResult | null>(null);
   const [category, setCategory] = useState<WishCategory | null>(null);
-  const [paymentLoading, setPaymentLoading] = useState(false);
   const [language, setLanguage] = useState<Language>('zh-CN');
   const [isWhitepaperOpen, setIsWhitepaperOpen] = useState(false);
   const [wishText, setWishText] = useState('');
   const [showPayModal, setShowPayModal] = useState(false);
   const [copied, setCopied] = useState('');
+  const [commerceOpened, setCommerceOpened] = useState(false);
+  const [interpreting, setInterpreting] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -35,7 +35,6 @@ const App: React.FC = () => {
             console.error("Failed to parse share link", e);
         }
     }
-    // Auto-select category from URL param
     const cat = params.get('category') as WishCategory | null;
     if (cat && ['career','wealth','love','health','family'].includes(cat)) {
       setCategory(cat);
@@ -55,7 +54,7 @@ const App: React.FC = () => {
     setAppState(AppState.PAYMENT);
   };
 
-  // Generate Awal CLI command (no stickNumbers — server derives from payment nonce)
+  // Generate Awal CLI command
   const getAwalCommand = () => {
     const bodyObj: Record<string, string> = { category: category || 'career', language };
     if (wishText) bodyObj.wishText = wishText;
@@ -68,27 +67,40 @@ const App: React.FC = () => {
     setTimeout(() => setCopied(''), 2000);
   };
 
-  // Wallet connect → pay → get fortune
-  const handleWalletPay = async () => {
-    setPaymentLoading(true);
+  // Open Coinbase Commerce payment page
+  const handleCommercePay = () => {
+    window.open(COMMERCE_URL, '_blank');
+    setCommerceOpened(true);
+  };
+
+  // After Commerce payment confirmed by user, fetch fortune
+  const handleCommerceConfirm = async () => {
+    setShowPayModal(false);
+    setCommerceOpened(false);
+    setAppState(AppState.INTERPRETING);
+    setInterpreting(true);
     try {
-      await createPaymentSession();
-      setShowPayModal(false);
-      setAppState(AppState.INTERPRETING);
-      const result = await interpretFortune(category!, language, wishText);
+      const res = await fetch('/api/fortune/interpret-commerce', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ category, language, wishText }),
+      });
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
+      const result = await res.json();
       setFortune(result);
       setAppState(AppState.RESULT);
     } catch (e: any) {
       console.error(e);
-      alert(e.message || 'Payment or interpretation failed');
+      alert(e.message || 'Interpretation failed');
       setAppState(AppState.PAYMENT);
     } finally {
-      setPaymentLoading(false);
+      setInterpreting(false);
     }
   };
 
   const handlePayment = () => {
     setShowPayModal(true);
+    setCommerceOpened(false);
   };
 
   const handleReset = () => {
@@ -96,9 +108,8 @@ const App: React.FC = () => {
     setFortune(null);
     setCategory(null);
     setAppState(AppState.IDLE);
+    setCommerceOpened(false);
   };
-
-  const hasWallet = typeof window !== 'undefined' && !!(window as any).ethereum;
 
   return (
     <div className="min-h-screen flex flex-col items-center py-6 px-4 font-serif text-temple-paper relative overflow-x-hidden">
@@ -213,29 +224,64 @@ const App: React.FC = () => {
               </div>
 
               <div className="p-6 space-y-4">
-                {/* Option 1: Wallet Connect & Pay (x402) */}
-                <button
-                  onClick={handleWalletPay}
-                  disabled={paymentLoading}
-                  className="w-full p-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-lg shadow hover:shadow-lg transition-all disabled:opacity-50 flex items-center gap-3"
-                >
-                  <span className="text-2xl">💳</span>
-                  <div className="text-left flex-1">
-                    <div>{language === 'zh-CN' ? 'x402 钱包支付' : language === 'zh-TW' ? 'x402 錢包支付' : 'x402 Wallet Payment'}</div>
-                    <div className="text-xs opacity-70">Coinbase Wallet / MetaMask — {language === 'zh-CN' ? '免 Gas 签名支付' : language === 'zh-TW' ? '免 Gas 簽名支付' : 'Gasless signature payment'}</div>
+
+                {/* Option 1: Coinbase Commerce */}
+                {!commerceOpened ? (
+                  <button
+                    onClick={handleCommercePay}
+                    className="w-full p-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-lg shadow hover:shadow-lg transition-all flex items-center gap-3"
+                  >
+                    <span className="text-2xl">💳</span>
+                    <div className="text-left flex-1">
+                      <div>{language === 'zh-CN' ? 'Coinbase Commerce 支付' : language === 'zh-TW' ? 'Coinbase Commerce 支付' : 'Pay with Coinbase Commerce'}</div>
+                      <div className="text-xs opacity-70">{language === 'zh-CN' ? '支持多种加密货币，由 Coinbase 处理' : language === 'zh-TW' ? '支援多種加密貨幣，由 Coinbase 處理' : 'Multiple cryptocurrencies, powered by Coinbase'}</div>
+                    </div>
+                  </button>
+                ) : (
+                  <div className="border-2 border-green-500/60 rounded-lg p-4 bg-green-50 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl">✅</span>
+                      <div>
+                        <div className="font-bold text-green-800">
+                          {language === 'zh-CN' ? 'Coinbase Commerce 已打开' : language === 'zh-TW' ? 'Coinbase Commerce 已開啟' : 'Coinbase Commerce opened'}
+                        </div>
+                        <div className="text-xs text-green-600">
+                          {language === 'zh-CN' ? '请在新窗口中完成支付' : language === 'zh-TW' ? '請在新視窗中完成支付' : 'Please complete payment in the new window'}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleCommerceConfirm}
+                      disabled={interpreting}
+                      className="w-full py-3 bg-gradient-to-r from-green-600 to-green-700 text-white font-bold rounded-lg shadow hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      {interpreting ? (
+                        <>
+                          <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          {language === 'zh-CN' ? '解签中...' : language === 'zh-TW' ? '解籤中...' : 'Interpreting...'}
+                        </>
+                      ) : (
+                        <>
+                          🔮 {language === 'zh-CN' ? '我已支付完成，开始解签' : language === 'zh-TW' ? '我已支付完成，開始解籤' : "I've paid — get my fortune"}
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={handleCommercePay}
+                      className="w-full py-2 text-blue-600 text-sm underline hover:text-blue-800"
+                    >
+                      {language === 'zh-CN' ? '重新打开支付页面' : language === 'zh-TW' ? '重新開啟支付頁面' : 'Reopen payment page'}
+                    </button>
                   </div>
-                  {paymentLoading && (
-                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                  )}
-                </button>
+                )}
 
                 {/* Divider */}
                 <div className="flex items-center gap-2 text-gray-400 text-xs">
                   <div className="flex-1 h-px bg-gray-300"></div>
-                  <span>AI Agent</span>
+                  <span>AI Agent x402</span>
                   <div className="flex-1 h-px bg-gray-300"></div>
                 </div>
 
@@ -245,9 +291,9 @@ const App: React.FC = () => {
                     <span className="text-2xl">🤖</span>
                     <div>
                       <div className="font-bold text-temple-dark">
-                        {language === 'zh-CN' ? 'AI Agent 命令' : language === 'zh-TW' ? 'AI Agent 指令' : 'AI Agent Command'}
+                        {language === 'zh-CN' ? 'AI Agent 命令 (x402)' : language === 'zh-TW' ? 'AI Agent 指令 (x402)' : 'AI Agent Command (x402)'}
                       </div>
-                      <div className="text-xs text-gray-500">Awal x402 CLI</div>
+                      <div className="text-xs text-gray-500">Awal CLI — {language === 'zh-CN' ? '一键支付+解签' : language === 'zh-TW' ? '一鍵支付+解籤' : 'One-command pay & interpret'}</div>
                     </div>
                   </div>
                   <div className="bg-gray-900 text-green-400 p-3 rounded-lg text-xs font-mono overflow-x-auto whitespace-pre-wrap break-all max-h-32 overflow-y-auto">
