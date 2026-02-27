@@ -73,37 +73,52 @@ const App: React.FC = () => {
     return `# 🔮 AI Fortune Oracle — 请帮我求签
 
 ## 任务
-请帮我使用 x402 协议支付 0.01 USDC，调用 AI 算命 API 求一支「${catLabel}」签。${wishText ? `\n\n我的心愿：${wishText}` : ''}
+请帮我调用 AI 算命 API，求一支「${catLabel}」签。费用 0.01 USDC，通过 x402 协议自动支付。${wishText ? `\n\n我的心愿：${wishText}` : ''}
 
-## 前提条件
-你需要先安装 Awal CLI 并配置钱包：
+## ⚠️ 重要：必须用 Awal CLI 支付，不要直接转账！
+- **必须**使用下面的 \`npx awal x402 pay\` 命令，它会自动处理 x402 协议的签名和支付
+- **不要**直接向收款地址转 USDC！直接转账无法被 API 识别，钱会丢失
+- x402 的工作原理：发请求 → 收到 HTTP 402 → Awal 自动签名 → 带签名重试 → API 验证后返回结果
+
+## 第一步：检查 API 是否在线
+\`\`\`bash
+curl -s ${API_URL}/api/health
+\`\`\`
+正常应返回 \`{"status":"ok"}\`。如果无响应，说明 API 暂时离线，请稍后再试。
+
+## 第二步：安装 Awal CLI 并配置钱包
+如果还没安装过 Awal：
 \`\`\`bash
 npm install -g awal
 npx awal auth login your-email@example.com   # 用你的邮箱注册/登录
 npx awal auth verify <FLOW_ID> <6_DIGIT_CODE> # 验证邮箱验证码
 npx awal address   # 查看你的钱包地址
-npx awal balance   # 查看余额（需要 Base 链上的 USDC）
+npx awal balance   # 查看余额（需要 Base 链上至少 0.01 USDC）
 \`\`\`
 
-钱包需要有至少 0.01 USDC（Base 链）。可从交易所购买 USDC 转到 Base 链。
-
-## 执行命令
+## 第三步：执行求签命令
 \`\`\`bash
 ${cmd}
 \`\`\`
+这条命令会自动完成支付和求签，无需其他操作。
 
 ## 返回结果说明
-支付成功后，API 返回 JSON：
+成功后返回 JSON：
 - \`stickNumbers\`: 三支签号（由支付凭证自动生成，每次唯一）
 - \`mainPoem\`: 四句签诗
 - \`overallLuck\`: 运势评级（如 "中上 · 穩中有升"）
 - \`explanation\`: 运势详解
 - \`advice\`: 大师建议
 
+## 错误处理
+- **HTTP 402**：支付未完成（余额不足或签名失败）
+- **HTTP 504**：API 超时，请稍后重试
+- **无响应**：先用第一步检查 API 是否在线
+
 ## API 完整文档
 ${API_URL}/skill.md
 
-请在收到结果后，用中文为我解读签文内容。`;
+请在收到结果后，用中文为我详细解读签文内容。`;
   };
 
   const handleCopy = (text: string, label: string) => {

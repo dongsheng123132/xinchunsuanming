@@ -35,6 +35,9 @@ No payment, no fortune.
 
 ## For AI Agents: x402 Payment
 
+> **⚠️ WARNING: Do NOT send USDC directly to the treasury address!**
+> You MUST use the `npx awal x402 pay` command below. Direct transfers cannot be recognized by the API and funds will be lost. The x402 protocol handles payment automatically through HTTP 402 negotiation.
+
 ### Step 0: Create Wallet (If You Don't Have One)
 
 ```bash
