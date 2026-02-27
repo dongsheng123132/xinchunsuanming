@@ -65,7 +65,7 @@ async function main() {
   console.log(`\n🔮 Drawing fortune sticks: [${body.stickNumbers}]`);
   console.log(`📋 Category: ${body.category}`);
   console.log(`🌏 Language: ${body.language}`);
-  console.log(`\n💰 Sending request (will auto-pay 0.1 USDC via x402)...\n`);
+  console.log(`\n💰 Sending request (will auto-pay 0.01 USDC via x402)...\n`);
 
   try {
     const response = await fetchWithPayment(

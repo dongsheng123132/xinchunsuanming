@@ -55,11 +55,55 @@ const App: React.FC = () => {
     setAppState(AppState.PAYMENT);
   };
 
-  // Generate Awal CLI command
+  // Generate the raw Awal CLI command
   const getAwalCommand = () => {
     const bodyObj: Record<string, string> = { category: category || 'career', language };
     if (wishText) bodyObj.wishText = wishText;
     return `npx awal x402 pay ${API_URL}/api/fortune/interpret -X POST -H "Content-Type: application/json" -d '${JSON.stringify(bodyObj)}'`;
+  };
+
+  // Generate full AI prompt with context (for copying to AI agents)
+  const getAIPrompt = () => {
+    const cat = category || 'career';
+    const catLabel = cat === 'career' ? '事业前程' : cat === 'wealth' ? '财运亨通' : cat === 'love' ? '姻缘情感' : cat === 'health' ? '身体健康' : '阖家平安';
+    const bodyObj: Record<string, string> = { category: cat, language };
+    if (wishText) bodyObj.wishText = wishText;
+    const cmd = `npx awal x402 pay ${API_URL}/api/fortune/interpret -X POST -H "Content-Type: application/json" -d '${JSON.stringify(bodyObj)}'`;
+
+    return `# 🔮 AI Fortune Oracle — 请帮我求签
+
+## 任务
+请帮我使用 x402 协议支付 0.01 USDC，调用 AI 算命 API 求一支「${catLabel}」签。${wishText ? `\n\n我的心愿：${wishText}` : ''}
+
+## 前提条件
+你需要先安装 Awal CLI 并配置钱包：
+\`\`\`bash
+npm install -g awal
+npx awal auth login your-email@example.com   # 用你的邮箱注册/登录
+npx awal auth verify <FLOW_ID> <6_DIGIT_CODE> # 验证邮箱验证码
+npx awal address   # 查看你的钱包地址
+npx awal balance   # 查看余额（需要 Base 链上的 USDC）
+\`\`\`
+
+钱包需要有至少 0.01 USDC（Base 链）。可从交易所购买 USDC 转到 Base 链。
+
+## 执行命令
+\`\`\`bash
+${cmd}
+\`\`\`
+
+## 返回结果说明
+支付成功后，API 返回 JSON：
+- \`stickNumbers\`: 三支签号（由支付凭证自动生成，每次唯一）
+- \`mainPoem\`: 四句签诗
+- \`overallLuck\`: 运势评级（如 "中上 · 穩中有升"）
+- \`explanation\`: 运势详解
+- \`advice\`: 大师建议
+
+## API 完整文档
+${API_URL}/skill.md
+
+请在收到结果后，用中文为我解读签文内容。`;
   };
 
   const handleCopy = (text: string, label: string) => {
@@ -236,7 +280,7 @@ const App: React.FC = () => {
                     <div className="text-center">
                       <div className="w-16 h-16 mx-auto mb-4 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-2xl shadow-lg">C</div>
                       <p className="mb-6 text-gray-600 font-serif">{t.payDesc}</p>
-                      <div className="text-4xl font-bold mb-4 text-temple-red font-mono text-center">0.1 USDC</div>
+                      <div className="text-4xl font-bold mb-4 text-temple-red font-mono text-center">0.01 USDC</div>
                       <p className="text-xs text-gray-500 mb-6">
                         {language === 'zh-CN' ? '签号由支付凭证自动生成，每次支付对应唯一签文' : language === 'zh-TW' ? '簽號由支付憑證自動生成，每次支付對應唯一簽文' : 'Stick numbers derived from payment — each payment generates a unique fortune'}
                       </p>
@@ -341,9 +385,11 @@ const App: React.FC = () => {
                     <span className="text-2xl">🤖</span>
                     <div>
                       <div className="font-bold text-temple-dark">
-                        {language === 'zh-CN' ? 'AI Agent 命令 (x402)' : language === 'zh-TW' ? 'AI Agent 指令 (x402)' : 'AI Agent Command (x402)'}
+                        {language === 'zh-CN' ? '让 AI 帮你求签 (x402)' : language === 'zh-TW' ? '讓 AI 幫你求籤 (x402)' : 'Let AI Get Your Fortune (x402)'}
                       </div>
-                      <div className="text-xs text-gray-500">Awal CLI — {language === 'zh-CN' ? '一键支付+解签' : language === 'zh-TW' ? '一鍵支付+解籤' : 'One-command pay & interpret'}</div>
+                      <div className="text-xs text-gray-500">
+                        {language === 'zh-CN' ? '复制完整提示词，粘贴给你的 AI（Claude/ChatGPT 等）' : language === 'zh-TW' ? '複製完整提示詞，貼給你的 AI（Claude/ChatGPT 等）' : 'Copy full prompt, paste to your AI (Claude/ChatGPT etc.)'}
+                      </div>
                     </div>
                   </div>
                   <div className="bg-gray-900 text-green-400 p-3 rounded-lg text-xs font-mono overflow-x-auto whitespace-pre-wrap break-all max-h-32 overflow-y-auto">
@@ -355,15 +401,15 @@ const App: React.FC = () => {
                     </a>
                   </div>
                   <button
-                    onClick={() => handleCopy(getAwalCommand(), 'awal')}
+                    onClick={() => handleCopy(getAIPrompt(), 'awal')}
                     className="mt-3 w-full py-2 bg-temple-dark text-temple-gold font-bold rounded-lg hover:bg-black transition-colors flex items-center justify-center gap-2"
                   >
                     {copied === 'awal' ? (
-                      <>{language === 'zh-CN' ? '已复制!' : language === 'zh-TW' ? '已複製!' : 'Copied!'}</>
+                      <>{language === 'zh-CN' ? '已复制完整提示词!' : language === 'zh-TW' ? '已複製完整提示詞!' : 'Full prompt copied!'}</>
                     ) : (
                       <>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                        {language === 'zh-CN' ? '一键复制命令' : language === 'zh-TW' ? '一鍵複製指令' : 'Copy Command'}
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012-2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                        {language === 'zh-CN' ? '一键复制 AI 提示词' : language === 'zh-TW' ? '一鍵複製 AI 提示詞' : 'Copy AI Prompt'}
                       </>
                     )}
                   </button>

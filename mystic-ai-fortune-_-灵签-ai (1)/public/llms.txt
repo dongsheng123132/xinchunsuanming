@@ -8,7 +8,7 @@
 npx awal x402 pay https://xinchunsuanming.vercel.app/api/fortune/interpret -X POST -H "Content-Type: application/json" -d '{"category":"career","language":"zh-CN"}'
 
 ## API Endpoints
-- POST /api/fortune/interpret — x402, 0.1 USDC (AI agents)
+- POST /api/fortune/interpret — x402, 0.01 USDC (AI agents)
 - POST /api/fortune/interpret-commerce — Coinbase Commerce (humans)
 - GET /api/health — Health check
 - GET /skill.md — Skill documentation

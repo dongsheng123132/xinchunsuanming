@@ -64,8 +64,8 @@ export const TRANSLATIONS: Record<Language, {
     wishNote: "This text will not be made public. It will be treated as your personal New Year prayer and used together with the three sticks to generate a more tailored blessing and guidance.",
     
     payTitle: "Offering of Sincerity",
-    payDesc: "Offer 0.1 USDC via x402 to seal this wish on-chain.",
-    payBtn: "Offer 0.1 USDC",
+    payDesc: "Offer 0.01 USDC via x402 to seal this wish on-chain.",
+    payBtn: "Offer 0.01 USDC",
     processing: "Processing Offering...",
     
     shakeTitle: "Ask the Oracle",
@@ -87,7 +87,7 @@ export const TRANSLATIONS: Record<Language, {
     whitepaperContent: `
 ## Introduction
 
-This is an **AI Fortune Oracle** built for the Lunar New Year. Users select a wish direction (Career, Wealth, Love, Health, Family), write a personal prayer, pay 0.1 USDC, and receive an exclusive fortune poem with interpretation and guidance from an AI Taoist master.
+This is an **AI Fortune Oracle** built for the Lunar New Year. Users select a wish direction (Career, Wealth, Love, Health, Family), write a personal prayer, pay 0.01 USDC, and receive an exclusive fortune poem with interpretation and guidance from an AI Taoist master.
 
 ## Core Mechanism: Payment-Derived Fortune Sticks
 
@@ -110,7 +110,7 @@ We use Coinbase's [x402 protocol](https://www.x402.org/) — an HTTP-native paym
 **Key properties:**
 - **Gasless** — users pay zero gas; payment is a pure signature
 - **Base L2** — low cost, fast finality, Coinbase ecosystem
-- **0.1 USDC per reading** — transparent, no subscriptions, no accounts
+- **0.01 USDC per reading** — transparent, no subscriptions, no accounts
 
 ## AI Interpretation Engine
 
@@ -176,8 +176,8 @@ AI agents can discover, understand, pay, and consume this service autonomously.
     wishNote: "这段话不会公开展示，但会与本次求签一起，被视作你写给这一年的认真祈愿。AI 解签时会结合「方向 + 心愿内容 + 三支签号」给出更贴近你当下状态的祝福与建议。",
     
     payTitle: "香火供奉",
-    payDesc: "通过 x402 协议支付 0.1 USDC 香火钱，将这份心愿郑重立为新春祈愿。",
-    payBtn: "支付 0.1 USDC",
+    payDesc: "通过 x402 协议支付 0.01 USDC 香火钱，将这份心愿郑重立为新春祈愿。",
+    payBtn: "支付 0.01 USDC",
     processing: "确认香火中...",
     
     shakeTitle: "诚心求籤",
@@ -199,7 +199,7 @@ AI agents can discover, understand, pay, and consume this service autonomously.
     whitepaperContent: `
 ## 项目简介
 
-这是一个为农历新年打造的 **AI 开运福签** 应用。用户选择心愿方向（事业、财运、感情、健康、阖家平安），写下新春祈愿，支付 0.1 USDC 香火钱，由 AI 道学大师为你抽签解签，送上专属签诗、运势、详解与行动指引。
+这是一个为农历新年打造的 **AI 开运福签** 应用。用户选择心愿方向（事业、财运、感情、健康、阖家平安），写下新春祈愿，支付 0.01 USDC 香火钱，由 AI 道学大师为你抽签解签，送上专属签诗、运势、详解与行动指引。
 
 ## 核心机制：支付即求签
 
@@ -222,7 +222,7 @@ AI agents can discover, understand, pay, and consume this service autonomously.
 **核心优势：**
 - **零 Gas** — 用户无需支付 Gas 费，支付仅需一次签名
 - **Base L2** — 低成本、高速确认、Coinbase 生态
-- **0.1 USDC/次** — 透明按次收费，无需注册、无需订阅
+- **0.01 USDC/次** — 透明按次收费，无需注册、无需订阅
 
 ## AI 解签引擎
 
@@ -288,8 +288,8 @@ AI Agent 可以自主发现、理解、支付、调用本服务，无需人工�
     wishNote: "這段話不會公開展示，但會與本次求籤一起，被視作你寫給這一年的認真祈願。AI 解籤時會結合「方向 + 心願內容 + 三支籤號」給出更貼近你當下狀態的祝福與建議。",
     
     payTitle: "香火供奉",
-    payDesc: "透過 x402 協議支付 0.1 USDC 香火錢，將這份心願鄭重立為新春祈願。",
-    payBtn: "支付 0.1 USDC",
+    payDesc: "透過 x402 協議支付 0.01 USDC 香火錢，將這份心願鄭重立為新春祈願。",
+    payBtn: "支付 0.01 USDC",
     processing: "確認香火中...",
     
     shakeTitle: "誠心求籤",
@@ -311,7 +311,7 @@ AI Agent 可以自主发现、理解、支付、调用本服务，无需人工�
     whitepaperContent: `
 ## 專案簡介
 
-這是一個為農曆新年打造的 **AI 開運福籤** 應用。用戶選擇心願方向（事業、財運、感情、健康、闔家平安），寫下新春祈願，支付 0.1 USDC 香火錢，由 AI 道學大師為你抽籤解籤，送上專屬籤詩、運勢、詳解與行動指引。
+這是一個為農曆新年打造的 **AI 開運福籤** 應用。用戶選擇心願方向（事業、財運、感情、健康、闔家平安），寫下新春祈願，支付 0.01 USDC 香火錢，由 AI 道學大師為你抽籤解籤，送上專屬籤詩、運勢、詳解與行動指引。
 
 ## 核心機制：支付即求籤
 
@@ -334,7 +334,7 @@ AI Agent 可以自主发现、理解、支付、调用本服务，无需人工�
 **核心優勢：**
 - **零 Gas** — 用戶無需支付 Gas 費，支付僅需一次簽名
 - **Base L2** — 低成本、高速確認、Coinbase 生態
-- **0.1 USDC/次** — 透明按次收費，無需註冊、無需訂閱
+- **0.01 USDC/次** — 透明按次收費，無需註冊、無需訂閱
 
 ## AI 解籤引擎
 

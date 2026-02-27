@@ -5,16 +5,16 @@ description: AI Lunar New Year fortune oracle. Humans pay via Coinbase Commerce,
 homepage: https://xinchunsuanming.vercel.app
 api_base: https://xinchunsuanming.vercel.app/api
 auth: x402 (AI agents) / Coinbase Commerce (humans)
-pricing: 0.1 USDC per reading
+pricing: 0.01 USDC per reading
 network: Base (eip155:8453)
 treasury: "0x4eCf92bAb524039Fc4027994b9D88C2DB2Ee05E6"
 usdc_contract: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
-metadata: {"emoji":"🔮","category":"ai-service","min_price":"$0.10"}
+metadata: {"emoji":"🔮","category":"ai-service","min_price":"$0.01"}
 ---
 
 # 🔮 AI Fortune Oracle — Skill Doc
 
-> **TL;DR for AI Agents:** Pay 0.1 USDC via x402 on Base → get AI fortune reading. One command:
+> **TL;DR for AI Agents:** Pay 0.01 USDC via x402 on Base → get AI fortune reading. One command:
 > ```
 > npx awal x402 pay https://xinchunsuanming.vercel.app/api/fortune/interpret -X POST -H "Content-Type: application/json" -d '{"category":"career","language":"zh-CN"}'
 > ```
@@ -23,7 +23,7 @@ metadata: {"emoji":"🔮","category":"ai-service","min_price":"$0.10"}
 
 ## What Is This
 
-AI 新春福签 — a Lunar New Year fortune oracle. Pick a category, pay 0.1 USDC, get an AI Taoist master's interpretation with poem, luck level, explanation, and guidance.
+AI 新春福签 — a Lunar New Year fortune oracle. Pick a category, pay 0.01 USDC, get an AI Taoist master's interpretation with poem, luck level, explanation, and guidance.
 
 **Two payment paths:**
 - **Humans** → Coinbase Commerce checkout (website button)
@@ -56,7 +56,7 @@ npx awal x402 pay https://xinchunsuanming.vercel.app/api/fortune/interpret \
   -d '{"category":"career","language":"zh-CN"}'
 ```
 
-**Response (200 — after 0.1 USDC auto-settled):**
+**Response (200 — after 0.01 USDC auto-settled):**
 ```json
 {
   "stickNumbers": [42, 17, 88],
@@ -90,7 +90,7 @@ Payment is processed by Coinbase Commerce. After payment, click "I've paid" to g
 
 ### POST `/api/fortune/interpret` — x402 Protected (AI Agents)
 
-**Price:** 0.1 USDC via x402 on Base
+**Price:** 0.01 USDC via x402 on Base
 
 **Request:**
 ```bash
@@ -167,7 +167,7 @@ This document.
 
 | | AI Agents (x402) | Humans (Commerce) |
 |---|---|---|
-| **Price** | 0.1 USDC | 0.1 USDC |
+| **Price** | 0.01 USDC | 0.01 USDC |
 | **Method** | x402 EIP-3009 signature | Coinbase Commerce checkout |
 | **Gas** | None (gasless) | None |
 | **Network** | Base mainnet (8453) | Multiple (Commerce handles) |
@@ -203,7 +203,7 @@ echo "Advice: $(echo $RESULT | jq -r '.advice')"
 
 | Method | Endpoint | Auth | Price | Who |
 |--------|----------|------|-------|-----|
-| POST | `/api/fortune/interpret` | x402 | $0.10 | AI Agents |
-| POST | `/api/fortune/interpret-commerce` | Commerce | $0.10 | Humans |
+| POST | `/api/fortune/interpret` | x402 | $0.01 | AI Agents |
+| POST | `/api/fortune/interpret-commerce` | Commerce | $0.01 | Humans |
 | GET | `/api/health` | none | free | All |
 | GET | `/skill.md` | none | free | All |

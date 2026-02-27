@@ -53,12 +53,12 @@ async function doInit() {
               accepts: [
                 {
                   scheme: "exact",
-                  price: "$0.10",
+                  price: "$0.01",
                   network: NETWORK,
                   payTo: PAYMENT_ADDRESS,
                 },
               ],
-              description: "AI Fortune Interpretation - 0.1 USDC",
+              description: "AI Fortune Interpretation - 0.01 USDC",
               mimeType: "application/json",
             },
           },

@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 /**
- * Creates a Coinbase Commerce charge ($0.10 USDC).
+ * Creates a Coinbase Commerce charge ($0.01 USDC).
  * Returns the hosted_url for the user to pay, and charge_id to verify later.
  */
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -31,7 +31,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         description: `AI 新春福签 — ${category || "fortune"} (${language || "zh-CN"})`,
         pricing_type: "fixed_price",
         local_price: {
-          amount: "0.10",
+          amount: "0.01",
           currency: "USD",
         },
         metadata: {

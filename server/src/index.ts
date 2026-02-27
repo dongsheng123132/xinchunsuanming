@@ -56,7 +56,7 @@ async function initX402(app: express.Express) {
             accepts: [
               {
                 scheme: "exact",
-                price: "$0.10",
+                price: "$0.01",
                 network: NETWORK,
                 payTo: PAYMENT_ADDRESS,
               },
@@ -92,7 +92,7 @@ app.get("/api/health", (_req, res) => {
     x402_error: x402Error,
     network: NETWORK,
     payTo: PAYMENT_ADDRESS || "(not set)",
-    price: "$0.10 USDC",
+    price: "$0.01 USDC",
   });
 });
 
