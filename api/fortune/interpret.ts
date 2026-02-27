@@ -17,30 +17,52 @@ app.use(
 );
 
 let initPromise: Promise<void> | null = null;
+let x402InitOk = false;
 
 async function ensureInit() {
   if (!initPromise) {
-    initPromise = doInit();
+    initPromise = doInit().catch((e) => {
+      console.error("doInit failed:", e);
+      initPromise = null; // allow retry on next request
+    });
   }
   return initPromise;
+}
+
+// Timeout helper — reject if fn takes longer than ms
+function withTimeout<T>(fn: Promise<T>, ms: number, label: string): Promise<T> {
+  return Promise.race([
+    fn,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms)
+    ),
+  ]);
 }
 
 async function doInit() {
   const PAYMENT_ADDRESS = process.env.PAYMENT_ADDRESS;
   const NETWORK = process.env.NETWORK || "eip155:8453";
 
+  console.log(`doInit: PAYMENT_ADDRESS=${PAYMENT_ADDRESS ? "set" : "NOT SET"}, NETWORK=${NETWORK}`);
+
   if (PAYMENT_ADDRESS && PAYMENT_ADDRESS !== "0x0000000000000000000000000000000000000000") {
     try {
+      console.log("x402: loading modules...");
       const [
         { paymentMiddleware, x402ResourceServer },
         { ExactEvmScheme },
         { facilitator },
-      ] = await Promise.all([
-        import("@x402/express"),
-        import("@x402/evm/exact/server"),
-        import("@coinbase/x402"),
-      ]);
+      ] = await withTimeout(
+        Promise.all([
+          import("@x402/express"),
+          import("@x402/evm/exact/server"),
+          import("@coinbase/x402"),
+        ]),
+        15000,
+        "x402 module import"
+      );
 
+      console.log("x402: modules loaded, creating server...");
       const server = new x402ResourceServer(facilitator).register(
         NETWORK,
         new ExactEvmScheme()
@@ -65,10 +87,14 @@ async function doInit() {
           server
         )
       );
+      x402InitOk = true;
       console.log(`x402 ready: network=${NETWORK}, payTo=${PAYMENT_ADDRESS}`);
     } catch (e: any) {
       console.error("x402 init failed:", e.message);
+      // Continue without x402 — handler will still work but without payment protection
     }
+  } else {
+    console.log("x402: skipped (no PAYMENT_ADDRESS)");
   }
 
   // Route handler (runs after x402 middleware verifies payment)
